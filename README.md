@@ -10,6 +10,7 @@ A simple single-player, client-side web game (later with a global leaderboard ho
 - **Oxlint** (type-aware via `oxlint-tsgolint`) + **Oxfmt**
 - **Vitest**
 - **pnpm**
+- **Cloudflare Workers** (static assets, SPA fallback) via `@cloudflare/vite-plugin` + Wrangler
 
 ## Scripts
 
@@ -24,3 +25,8 @@ A simple single-player, client-side web game (later with a global leaderboard ho
 | `pnpm test`       | Vitest in watch mode                     |
 
 Add UI components with `pnpm dlx shadcn@latest add <component>`.
+
+## Deploying
+
+The app deploys as an assets-only Cloudflare Worker (`wrangler.jsonc`); unknown paths fall back to `index.html`.
+Run `pnpm exec wrangler login` once, then `pnpm deploy`.
