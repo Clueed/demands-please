@@ -1,3 +1,7 @@
 allowBuilds:
   esbuild: true
   workerd: true
+
+# Supply-chain hardening: skip versions published <24h ago, block git/tarball deps in transitive deps
+minimumReleaseAge: 1440
+blockExoticSubdeps: true
