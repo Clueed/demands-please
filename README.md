@@ -4,7 +4,7 @@ A simple single-player, client-side web game (later with a global leaderboard ho
 
 ## Stack
 
-- **Vite 8** + **React 19** + **TypeScript**
+- **Vite 8** + **React 19** (React Compiler via `@rolldown/plugin-babel`) + **TypeScript**
 - **Tailwind CSS v4** (via `@tailwindcss/vite`)
 - **shadcn/ui** (Base UI primitives, `nova` style, lucide icons)
 - **Oxlint** (type-aware via `oxlint-tsgolint`) + **Oxfmt**
