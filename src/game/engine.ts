@@ -1,3 +1,5 @@
+import { clamp } from "@/lib/utils";
+
 import type { CatalogApp, Decision, Demand, GameState, Outcome, Resolution } from "./types";
 
 /** Happiness change per outcome. Money is always the demand's cost (bought) or 0. */
@@ -11,8 +13,7 @@ export const HAPPINESS: Record<Outcome, number> = {
 /** Happiness is a 0–10 scale that starts in the middle. */
 export const HAPPINESS_SCALE = { min: 0, max: 10, start: 5 };
 
-const clampHappiness = (n: number) =>
-  Math.min(HAPPINESS_SCALE.max, Math.max(HAPPINESS_SCALE.min, n));
+const clampHappiness = (n: number) => clamp(n, HAPPINESS_SCALE.min, HAPPINESS_SCALE.max);
 
 /** Total spend starts at what the existing portfolio already costs. */
 export function newGame(demands: Demand[], catalog: CatalogApp[]): GameState {

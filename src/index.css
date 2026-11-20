@@ -46,6 +46,22 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /*
+   * Game window tokens, in game pixels (`--game-px` is set by <Stage>). Inlined so they
+   * resolve inside the game window. Placeholders: the font and sizes are style decisions.
+   */
+  --font-game: ui-monospace, monospace;
+  --text-game: calc(var(--game-px) * 8);
+  --text-game--line-height: calc(var(--game-px) * 10);
+  --text-game-sm: calc(var(--game-px) * 6);
+  --text-game-sm--line-height: calc(var(--game-px) * 8);
+}
+
+/* A 1 game pixel border drawn inside the box, so it doesn't shift content or coordinates. */
+@utility game-border {
+  outline: var(--game-px) solid var(--color-neutral-500);
+  outline-offset: calc(var(--game-px) * -1);
 }
 
 :root {
