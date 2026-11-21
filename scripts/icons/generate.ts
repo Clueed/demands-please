@@ -25,7 +25,7 @@ const files: Record<string, string | Buffer> = {
     {
       id: "/",
       name: "Demands, Please",
-      short_name: "Demands",
+      short_name: "Demands, Please",
       description:
         "A pixel-art desk game about approving and declining software requests at the IT demand desk.",
       lang: "en",

@@ -1,4 +1,4 @@
-# demands-pls
+# Demands, Please
 
 A simple single-player, client-side web game (later with a global leaderboard hosted on Cloudflare).
 
