@@ -198,7 +198,7 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
             fontSize="7"
             fill="#d8d3b4"
           >
-            PROCUREMENT
+            DEMANDS, PLEASE
           </text>
         </g>
 
