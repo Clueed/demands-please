@@ -17,13 +17,13 @@ import {
 import { generateDays } from "./generate";
 import { judge, RULES, verdict } from "./rules";
 import {
-  BACKLOG_LIMIT,
+  SHADOW_IT_LIMIT,
   dayDate,
   DAY_END,
   DAY_START,
   DEMANDS_PER_DAY,
   LAST_DAY,
-  MAX_MISTAKES,
+  FINDINGS_LIMIT,
   PUSH_MINUTES,
   SLOT_MINUTES,
 } from "./time";
@@ -149,7 +149,7 @@ describe("the day", () => {
   it("a decision is final; next calls in the following visitor", () => {
     let s = working();
     s = decide(s, { kind: "approve" });
-    expect(currentResolution(s)?.citation).toBeNull();
+    expect(currentResolution(s)?.finding).toBeNull();
     expect(decide(s, { kind: "decline" })).toBe(s);
     s = next(s);
     expect(currentDemand(s)?.id).toBe("d1");
@@ -198,9 +198,9 @@ describe("the day", () => {
 
   it("at closing time everyone left waiting goes to the backlog", () => {
     const s = tick(working(10), DAY_END - DAY_START);
-    expect(s.phase).toBe("fired");
-    expect(s.firedFor).toBe("backlog");
-    expect(s.backlog.length).toBeGreaterThan(BACKLOG_LIMIT);
+    expect(s.phase).toBe("lost");
+    expect(s.lostTo).toBe("shadowIT");
+    expect(s.backlog.length).toBeGreaterThanOrEqual(SHADOW_IT_LIMIT);
   });
 
   it("the backlog comes first the next morning", () => {
@@ -225,36 +225,36 @@ describe("the day", () => {
 /** Decline a valid ticket, then let the visitor's time run out. */
 const wrong = (s: GameState) => tick(decide(s, { kind: "decline" }), SLOT_MINUTES);
 
-describe("mistakes", () => {
-  it("one too many gets you fired", () => {
+describe("findings", () => {
+  it("the last finding allowed ends the run with an audit", () => {
     let s = working(10);
-    for (let i = 0; i < MAX_MISTAKES; i++) s = wrong(s);
-    expect(s.mistakes).toBe(MAX_MISTAKES);
+    for (let i = 1; i < FINDINGS_LIMIT; i++) s = wrong(s);
+    expect(s.findings).toBe(FINDINGS_LIMIT - 1);
     expect(s.phase).toBe("working");
     s = decide(s, { kind: "decline" });
-    expect(s).toMatchObject({ phase: "fired", firedFor: "mistakes" });
+    expect(s).toMatchObject({ phase: "lost", lostTo: "audit", findings: FINDINGS_LIMIT });
   });
 
-  it("finishing an hour early takes back an earlier mistake, and spends the hour", () => {
+  it("finishing an hour early closes an earlier finding, and spends the hour", () => {
     let s = next(decide(working(4), { kind: "decline" }));
-    // Wrong at 09:00 and sent off at once, but a mistake never cancels itself.
-    expect(s.mistakes).toBe(1);
+    // Wrong at 09:00 and sent off at once, but a finding never cancels itself.
+    expect(s.findings).toBe(1);
     s = tick(s, 30);
     // 09:30, and this appointment runs until 11:00: 90 minutes early.
     s = next(decide(s, { kind: "approve" }));
-    expect(s.mistakes).toBe(0);
+    expect(s.findings).toBe(0);
     expect(s.forgivenAt).toBe(DAY_START + 30);
     expect(s.deadline).toBe(DAY_START + 3 * SLOT_MINUTES - FORGIVE_MINUTES);
   });
 
-  it("takes back at most one mistake a day", () => {
+  it("closes at most one finding a day", () => {
     let s = working(6);
     // Blind and instant: every ticket declined at 09:00 and sent off at once.
-    for (let i = 0; i < 4; i++) s = next(decide(s, { kind: "decline" }));
-    expect(s.mistakes).toBe(3);
+    for (let i = 0; i < FINDINGS_LIMIT + 1; i++) s = next(decide(s, { kind: "decline" }));
+    expect(s).toMatchObject({ findings: FINDINGS_LIMIT, phase: "lost", lostTo: "audit" });
   });
 
-  it("with no mistakes, time saved is kept", () => {
+  it("with no findings, time saved is kept", () => {
     let s = working(4);
     s = next(decide(s, { kind: "approve" }));
     s = next(decide(s, { kind: "approve" }));

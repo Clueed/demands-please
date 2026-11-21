@@ -76,7 +76,7 @@ export type Resolution = {
   /** Game clock (minutes since midnight) when it was decided. */
   at: number;
   /** Why the decision was wrong, or null if it was right. */
-  citation: string | null;
+  finding: string | null;
 };
 
 export type Phase =
@@ -85,7 +85,7 @@ export type Phase =
   | "working"
   /** Day's over: the summary before the next briefing. */
   | "dayEnd"
-  | "fired"
+  | "lost"
   | "won";
 
 export type GameState = {
@@ -102,10 +102,10 @@ export type GameState = {
   backlog: Demand[];
   /** Every decision this run. */
   log: Resolution[];
-  mistakes: number;
-  /** Game clock when finishing early took a mistake back today, or null. */
+  findings: number;
+  /** Game clock when finishing early closed a finding today, or null. */
   forgivenAt: number | null;
   /** New requests for every day, generated when the run starts. */
   days: Demand[][];
-  firedFor: "mistakes" | "backlog" | null;
+  lostTo: "audit" | "shadowIT" | null;
 };

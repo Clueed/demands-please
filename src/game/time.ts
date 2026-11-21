@@ -11,10 +11,10 @@ export const MS_PER_GAME_MINUTE = 500;
 export const LAST_DAY = 10;
 /** New requests per day. One slot less than the day holds, so there is a little slack. */
 export const DEMANDS_PER_DAY = 7;
-/** Mistakes you get away with; one more and you're fired. */
-export const MAX_MISTAKES = 3;
-/** Requests that may carry over to tomorrow; more than this and you're fired. */
-export const BACKLOG_LIMIT = 4;
+/** Audit findings that end the run: the steering committee takes over approvals. */
+export const FINDINGS_LIMIT = 3;
+/** Backlog at closing time that ends the run: departments buy their own tools. */
+export const SHADOW_IT_LIMIT = 3;
 
 /** Day 1 is Monday 2 November 2026; weekends are skipped. */
 const FIRST_DAY = Date.UTC(2026, 10, 2);

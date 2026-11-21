@@ -1,19 +1,19 @@
 import { generateDays } from "./generate";
 import { judge } from "./rules";
 import {
-  BACKLOG_LIMIT,
+  SHADOW_IT_LIMIT,
   DAY_END,
   DAY_START,
   LAST_DAY,
-  MAX_MISTAKES,
+  FINDINGS_LIMIT,
   PUSH_MINUTES,
   SLOT_MINUTES,
 } from "./time";
 import type { Decision, Demand, GameState, Resolution } from "./types";
 
 /**
- * Finishing this far ahead of schedule, with a mistake on record, takes the mistake back.
- * Once a day at most: otherwise rushing through blind would clear every mistake it makes.
+ * Finishing this far ahead of schedule, with a finding on record, closes the finding.
+ * Once a day at most: otherwise rushing through blind would close every finding it causes.
  */
 export const FORGIVE_MINUTES = 60;
 
@@ -27,10 +27,10 @@ export function newGame(seed: number, days: Demand[][] = generateDays(seed)): Ga
     queue: days[0] ?? [],
     backlog: [],
     log: [],
-    mistakes: 0,
+    findings: 0,
     forgivenAt: null,
     days,
-    firedFor: null,
+    lostTo: null,
   };
 }
 
@@ -56,34 +56,34 @@ export function decide(state: GameState, decision: Decision): GameState {
   const demand = currentDemand(state);
   if (!demand || currentResolution(state)) return state;
 
-  const citation = judge(demand, decision, state.day);
-  const resolution: Resolution = { demand, decision, day: state.day, at: state.clock, citation };
-  const mistakes = state.mistakes + (citation ? 1 : 0);
+  const finding = judge(demand, decision, state.day);
+  const resolution: Resolution = { demand, decision, day: state.day, at: state.clock, finding };
+  const findings = state.findings + (finding ? 1 : 0);
   return {
     ...state,
     log: [...state.log, resolution],
-    mistakes,
-    ...(mistakes > MAX_MISTAKES && { phase: "fired", firedFor: "mistakes" }),
+    findings,
+    ...(findings >= FINDINGS_LIMIT && { phase: "lost", lostTo: "audit" }),
   };
 }
 
 /**
  * Send the visitor off and call in the next one. Their appointment keeps its slot, so time
- * saved now carries over. Saving a whole hour with a mistake on record takes the mistake
- * back instead, once a day; the hour is spent on it.
+ * saved now carries over. Saving a whole hour with a finding on record closes it
+ * instead, once a day; the hour is spent on it.
  */
 export function next(state: GameState): GameState {
   const resolution = currentResolution(state);
   if (!resolution) return state;
-  // Only a mistake made before this ticket; else a quick wrong guess would cancel itself.
-  const earlier = state.mistakes - (resolution.citation ? 1 : 0);
+  // Only a finding from before this ticket; else a quick wrong guess would cancel itself.
+  const earlier = state.findings - (resolution.finding ? 1 : 0);
   const forgive =
     earlier > 0 && state.forgivenAt === null && state.deadline - state.clock >= FORGIVE_MINUTES;
   return advance({
     ...state,
     queue: state.queue.slice(1),
     deadline: state.deadline + SLOT_MINUTES - (forgive ? FORGIVE_MINUTES : 0),
-    mistakes: state.mistakes - (forgive ? 1 : 0),
+    findings: state.findings - (forgive ? 1 : 0),
     forgivenAt: forgive ? state.clock : state.forgivenAt,
   });
 }
@@ -123,13 +123,13 @@ function endDay(state: GameState): GameState {
   const [first, ...rest] = state.queue;
   const leftover = first && !currentResolution(state) ? state.queue : rest;
   const backlog = [...state.backlog, ...leftover];
-  const fired = backlog.length > BACKLOG_LIMIT;
+  const lost = backlog.length >= SHADOW_IT_LIMIT;
   return {
     ...state,
     queue: [],
     backlog,
-    phase: fired ? "fired" : state.day === LAST_DAY ? "won" : "dayEnd",
-    firedFor: fired ? "backlog" : null,
+    phase: lost ? "lost" : state.day === LAST_DAY ? "won" : "dayEnd",
+    lostTo: lost ? "shadowIT" : null,
   };
 }
 
@@ -164,13 +164,13 @@ export function schedule(state: GameState) {
   });
 }
 
-export type DaySummary = { decided: number; mistakes: number; backlog: number };
+export type DaySummary = { decided: number; findings: number; backlog: number };
 
 export function summarizeDay(state: GameState): DaySummary {
   const today = state.log.filter((r) => r.day === state.day);
   return {
     decided: today.length,
-    mistakes: today.filter((r) => r.citation).length,
+    findings: today.filter((r) => r.finding).length,
     backlog: state.backlog.length,
   };
 }

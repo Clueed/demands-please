@@ -713,7 +713,7 @@
 .office-next:hover:enabled {
   background: #4a6a5d;
 }
-.office-citation {
+.office-finding {
   margin-top: calc(var(--gp) * 2);
   padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
   background: #e9c8bb;

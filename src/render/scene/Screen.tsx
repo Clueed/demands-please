@@ -2,7 +2,7 @@ import { useReducer, useState } from "react";
 
 import { currentDemand, currentResolution, schedule } from "@/game/engine";
 import { isInForce, visibleAttachments } from "@/game/rules";
-import { BACKLOG_LIMIT, MAX_MISTAKES } from "@/game/time";
+import { SHADOW_IT_LIMIT, FINDINGS_LIMIT } from "@/game/time";
 import type { AttachmentKind, Decision, GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ import { ScreenWindow } from "../screen/ScreenWindow";
 import { Ticket } from "../screen/Ticket";
 import { Taskbar } from "../screen/Taskbar";
 
-/** How long, in game minutes, the "mistake cleared" notice stays up. */
+/** How long, in game minutes, the "finding closed" notice stays up. */
 const NOTICE_MINUTES = 90;
 
 export type ScreenHandlers = {
@@ -98,21 +98,24 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
           ))}
 
       <Taskbar minutes={state.clock} onRestart={on.onRestart}>
-        <span className="office-tray" title="Mistakes on record">
-          Mistakes
-          <span className="office-pips" aria-label={`${state.mistakes} of ${MAX_MISTAKES}`}>
-            {Array.from({ length: MAX_MISTAKES }, (_, i) => (
-              <span key={i} data-on={i < state.mistakes} />
+        <span className="office-tray" title="Open audit findings">
+          Findings
+          <span className="office-pips" aria-label={`${state.findings} of ${FINDINGS_LIMIT}`}>
+            {Array.from({ length: FINDINGS_LIMIT }, (_, i) => (
+              <span key={i} data-on={i < state.findings} />
             ))}
           </span>
         </span>
         <span
-          className={cn("office-tray office-number", backlog > BACKLOG_LIMIT && "office-warning")}
+          className={cn(
+            "office-tray office-number",
+            backlog >= SHADOW_IT_LIMIT && "office-warning",
+          )}
           title="Requests carried over to tomorrow"
         >
-          Backlog {backlog}/{BACKLOG_LIMIT}
+          Backlog {backlog}/{SHADOW_IT_LIMIT}
         </span>
-        {forgiven && <span className="office-notice">An hour early: mistake cleared</span>}
+        {forgiven && <span className="office-notice">An hour early: finding closed</span>}
       </Taskbar>
       {state.phase !== "working" && (
         <DayOverlay

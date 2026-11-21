@@ -3,11 +3,12 @@ import type { ReactNode } from "react";
 
 import { summarizeDay } from "@/game/engine";
 import { RULES } from "@/game/rules";
-import { BACKLOG_LIMIT, dayDate, formatDay, LAST_DAY, MAX_MISTAKES } from "@/game/time";
+import { dayDate, FINDINGS_LIMIT, formatDay, LAST_DAY, SHADOW_IT_LIMIT } from "@/game/time";
 import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
 import { control } from "../styles";
+import { ENDINGS } from "./endings";
 
 /**
  * Between appointments: the morning memo, the evening summary, and the end of the run.
@@ -45,6 +46,7 @@ export function DayOverlay({
           <p className="office-muted">
             Approve or decline each request, then press Next. Every visitor gets an hour. Out of
             time? Push the calendar, but whoever doesn't fit before 17:00 ends up in the backlog.
+            Wrong calls become audit findings.
           </p>
         )}
         <p>{state.queue.length} appointments today.</p>
@@ -66,16 +68,11 @@ export function DayOverlay({
     );
   }
 
-  const won = state.phase === "won";
+  const ending = ENDINGS[state.lostTo ?? "won"];
   return (
-    <Sheet title={won ? "You made it" : "You're fired"}>
-      <p>
-        {won
-          ? `Ten days of governance, and the company still runs. Mistakes on record: ${state.mistakes}.`
-          : state.firedFor === "mistakes"
-            ? `More than ${MAX_MISTAKES} mistakes. Audit has questions.`
-            : `More than ${BACKLOG_LIMIT} requests in the backlog. The business went around you.`}
-      </p>
+    <Sheet title={ending.title}>
+      <p className="office-label">{ending.from}</p>
+      <p>{ending.text(state)}</p>
       <Stats state={state} />
       <button className={cn(control, "office-next self-end")} onClick={onRestart}>
         <RotateCcw aria-hidden="true" /> Play again
@@ -90,15 +87,15 @@ function Stats({ state }: { state: GameState }) {
     <dl className="office-fields">
       <dt className="office-label">Decided today</dt>
       <dd className="office-number">{s.decided}</dd>
-      <dt className="office-label">Mistakes today</dt>
-      <dd className="office-number">{s.mistakes}</dd>
-      <dt className="office-label">On record</dt>
+      <dt className="office-label">Findings today</dt>
+      <dd className="office-number">{s.findings}</dd>
+      <dt className="office-label">Open findings</dt>
       <dd className="office-number">
-        {state.mistakes} / {MAX_MISTAKES}
+        {state.findings} / {FINDINGS_LIMIT}
       </dd>
       <dt className="office-label">Backlog</dt>
       <dd className="office-number">
-        {s.backlog} / {BACKLOG_LIMIT}
+        {s.backlog} / {SHADOW_IT_LIMIT}
       </dd>
     </dl>
   );

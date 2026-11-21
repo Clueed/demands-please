@@ -129,7 +129,7 @@ export function Ticket({
       <div className="office-actions shrink-0 p-2">
         {resolution ? (
           <div className="flex items-center gap-2">
-            <span className={cn("office-stamp flex-1 truncate", resolution.citation && "is-wrong")}>
+            <span className={cn("office-stamp flex-1 truncate", resolution.finding && "is-wrong")}>
               {stampOf(resolution)}
             </span>
             <button className={`${control} office-next`} onClick={onNext}>
@@ -150,9 +150,9 @@ export function Ticket({
             </button>
           </div>
         )}
-        {resolution?.citation && (
-          <p className="office-citation" role="alert">
-            Citation: {resolution.citation}
+        {resolution?.finding && (
+          <p className="office-finding" role="alert">
+            Audit finding: {resolution.finding}
           </p>
         )}
       </div>
