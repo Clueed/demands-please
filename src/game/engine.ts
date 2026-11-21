@@ -1,5 +1,6 @@
 import { generateDays } from "./generate";
-import { judge } from "./rules";
+import { CATALOG } from "./data";
+import { isInForce, judge } from "./rules";
 import { DAY_END, DAY_START, LAST_DAY, FINDINGS_LIMIT } from "./time";
 import type { Decision, Demand, GameState, Resolution } from "./types";
 
@@ -18,6 +19,7 @@ export function newGame(seed: number, days: Demand[][] = generateDays(seed)): Ga
     queue: days[0] ?? [],
     log: [],
     findings: 0,
+    retired: [],
     forgivenToday: false,
     days,
     lostTo: null,
@@ -46,7 +48,7 @@ export function decide(state: GameState, decision: Decision): GameState {
   const demand = currentDemand(state);
   if (!demand || currentResolution(state)) return state;
 
-  const finding = judge(demand, decision, state.day);
+  const finding = judge(demand, decision, state.day, state.retired);
   const resolution: Resolution = {
     demand,
     decision,
@@ -60,8 +62,22 @@ export function decide(state: GameState, decision: Decision): GameState {
     ...state,
     log: [...state.log, resolution],
     findings,
+    retired: retiring(state, demand, decision)
+      ? [...state.retired, demand.retires!]
+      : state.retired,
     ...(findings >= FINDINGS_LIMIT && { phase: "lost", lostTo: "audit" }),
   };
+}
+
+/** One in, one out: an approved app switches off the catalog app it named, if there is one. */
+function retiring(state: GameState, demand: Demand, decision: Decision) {
+  return (
+    decision.kind === "approve" &&
+    isInForce("retire", state.day) &&
+    !!demand.retires &&
+    !state.retired.includes(demand.retires) &&
+    CATALOG.some((a) => a.name === demand.retires)
+  );
 }
 
 /** Send the visitor off and call in the next one. The last one out ends the day. */

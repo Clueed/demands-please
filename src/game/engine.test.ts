@@ -113,6 +113,28 @@ describe("rules", () => {
     );
   });
 
+  it("one in, one out: an app can only be retired once", () => {
+    const retiring = valid({ retires: "Campaign Hub" });
+    expect(verdict(retiring, 10, []).kind).toBe("approve");
+    expect(judge(retiring, { kind: "approve" }, 10, ["Campaign Hub"])).toMatch(/already retired/);
+  });
+
+  it("a retired app can't be offered any more", () => {
+    const owned = valid({ matchId: "campaign-hub", retires: "Social Scheduler" });
+    expect(verdict(owned, 10).kind).toBe("offer");
+    expect(verdict(owned, 10, ["Campaign Hub"]).kind).toBe("approve");
+  });
+
+  it("approving on day 10 switches off the app it retires", () => {
+    let s = working(2);
+    for (let day = 1; day < LAST_DAY; day++) s = startDay(nextDay(approve(approve(s))));
+    s = decide(s, { kind: "approve" });
+    expect(s.retired).toEqual(["Campaign Hub"]);
+    s = decide(next(s), { kind: "approve" });
+    expect(s.retired).toEqual(["Campaign Hub"]);
+    expect(s.log.at(-1)?.finding).toMatch(/already retired/);
+  });
+
   it("are ten, one per day", () => {
     expect(RULES.map((r) => r.day)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
@@ -142,6 +164,53 @@ describe("generateDays", () => {
       ),
     );
     expect(Math.max(...reasons)).toBe(1);
+  });
+
+  it("keeps each app's price and SSO, and each vendor's certificate, the same all run", () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const seen = new Map<string, Set<string>>();
+      const note = (key: string, value: string) =>
+        seen.set(key, (seen.get(key) ?? new Set()).add(value));
+      for (const t of generateDays(seed).flat())
+        for (const a of t.attachments) {
+          if (a.kind === "vendorSheet" && a.product === t.app && a.vendor === t.vendor)
+            note(`app ${t.app}`, `${a.price} ${a.sso}`);
+          if (a.kind === "certificate") note(`cert ${a.vendor}`, `${a.standard} ${a.validUntil}`);
+        }
+      const contradictions = [...seen].filter(([, values]) => values.size > 1);
+      expect(contradictions, `seed ${seed}`).toEqual([]);
+    }
+  });
+
+  it("never runs out of apps to ask for, whatever the seed", () => {
+    for (let seed = 0; seed < 500; seed++) expect(() => generateDays(seed)).not.toThrow();
+  });
+
+  it("breaks every rule some time", () => {
+    const broken = new Set(
+      Array.from({ length: 20 }, (_, seed) => generateDays(seed)).flatMap((run) =>
+        run.flatMap((tickets, i) =>
+          tickets.flatMap((t) => {
+            const day = i + 1;
+            return RULES.filter((r) => r.day <= day && r.check?.(t, dayDate(day), []));
+          }),
+        ),
+      ),
+    );
+    const checked = RULES.filter((r) => r.check).map((r) => r.id);
+    expect([...broken].map((r) => r.id).toSorted()).toEqual(checked.toSorted());
+  });
+
+  it("a perfect run has no findings, catalog changes and all", () => {
+    for (let seed = 0; seed < 20; seed++) {
+      let s = startDay(newGame(seed));
+      while (s.phase === "working") {
+        const v = verdict(currentDemand(s)!, s.day, s.retired);
+        s = next(decide(s, v.kind === "offer" ? { kind: "offer", appId: v.appId } : v));
+        if (s.phase === "dayEnd") s = startDay(nextDay(s));
+      }
+      expect(s).toMatchObject({ phase: "won", findings: 0 });
+    }
   });
 
   it("mixes approvals and declines", () => {

@@ -14,7 +14,7 @@ import { AppIcon } from "./AppIcon";
 import { FILE_NAMES } from "./attachments";
 
 /** Ticket fields that only show once a rule needs them. */
-const FIELD_FROM = { monitors: 9, retires: 10 };
+const FIELD_FROM = { retires: 10 };
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -89,9 +89,6 @@ export function Ticket({
           <Field label="Cost/yr">
             <span className="office-number">{money(demand.cost)}</span>
           </Field>
-          {day >= FIELD_FROM.monitors && (
-            <Field label="Monitors staff">{demand.monitorsEmployees ? "Yes" : "No"}</Field>
-          )}
           {day >= FIELD_FROM.retires && (
             <Field label="Retires">
               {demand.retires ?? <span className="office-empty">none</span>}

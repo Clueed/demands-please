@@ -42,12 +42,60 @@ export type Rng = ReturnType<typeof rng>;
 const FLAW_CHANCE = 0.5;
 /** Of those, the share that break the rule that's new today, so it gets practised. */
 const NEWEST_RULE_CHANCE = 0.5;
+/** Share of vendors whose security certificate runs out before or during the run. */
+const EXPIRING_CERT_CHANCE = 0.3;
+/** Share of apps that don't track employees but come with a works council approval anyway. */
+const DECOY_APPROVAL_CHANCE = 0.2;
 
 /** Rules a ticket can break by its fields. Reuse is a property of the archetype instead. */
 type FlawRule = Exclude<RuleId, "reuse">;
 
-const isFocus = (a: Archetype) => STRATEGY.focus.includes(a.capabilityId);
 const roundTo = (n: number, step: number) => Math.round(n / step) * step;
+
+/**
+ * What stays the same all run, so the same app or vendor never contradicts itself: each app's
+ * price and each vendor's certificate. Some certificates run out mid-run, so a vendor that was
+ * fine on Monday can fail on Thursday.
+ */
+type World = {
+  price: Record<string, number>;
+  certs: Record<string, { standard: "ISO/IEC 27001" | "SOC 2 Type II"; validUntil: string }>;
+};
+
+function makeWorld(r: Rng): World {
+  const price = Object.fromEntries(
+    ARCHETYPES.map((a) => [a.app, roundTo(a.cost * (0.8 + r.next() * 0.4), 1_000)]),
+  );
+  const vendors = [...new Set([...ARCHETYPES.map((a) => a.vendor), ...TECH_RADAR.adopt])];
+  const first = dayDate(1);
+  const last = dayDate(LAST_DAY);
+  const certs = Object.fromEntries(
+    vendors.map((v) => {
+      const expiring = r.chance(EXPIRING_CERT_CHANCE);
+      // Expiring ones run out somewhere between two months before day 1 and the last day.
+      const validUntil = expiring
+        ? addDays(first, -60 + Math.floor(r.next() * (60 + daysBetween(first, last))))
+        : addDays(last, 90 + Math.floor(r.next() * 600));
+      const standard = r.chance(0.5) ? ("ISO/IEC 27001" as const) : ("SOC 2 Type II" as const);
+      return [v, { standard, validUntil }];
+    }),
+  );
+  const world = { price, certs };
+
+  // Expired certificates mustn't leave too few apps to approve on the last day: renew some.
+  for (const a of ARCHETYPES) {
+    if (candidates(world, LAST_DAY, null, false).length >= MIN_VALID_APPS) break;
+    const cert = certs[a.vendor];
+    if (cert && cert.validUntil < last) cert.validUntil = addDays(last, 90);
+  }
+  return world;
+}
+
+/** Apps that must still pass every rule on the last day, so the days don't repeat too much. */
+const MIN_VALID_APPS = 5;
+
+const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(to) - Date.parse(from)) / (24 * 60 * 60 * 1000));
 
 /** Savings that clear the bar, by up to half again, so the check isn't always a close call. */
 const enoughSavings = (cost: number, r: Rng) =>
@@ -61,19 +109,55 @@ function tooLittleSavings(cost: number, r: Rng) {
   return Math.min(savings, needed - 1_000);
 }
 
-/** A ticket that passes every rule there is. Flaws are applied on top. */
-function validDemand(a: Archetype, r: Rng, day: number, ticket: number): Demand {
-  const cost = roundTo(a.cost * (0.8 + r.next() * 0.4), 1_000);
-  const today = dayDate(day);
+/**
+ * Rules an app passes or fails as it is, whatever the ticket says: its area, its vendor, its
+ * single sign-on and its vendor's certificate. Breaking one means picking an app that fails it.
+ */
+const APP_RULES = {
+  strategy: (a) => STRATEGY.focus.includes(a.capabilityId),
+  sso: (a) => a.sso,
+  techRadar: (a) => !TECH_RADAR.hold.includes(a.vendor),
+  certificate: (a, w, today) => (w.certs[a.vendor]?.validUntil ?? "") >= today,
+} satisfies Partial<Record<FlawRule, (a: Archetype, w: World, today: string) => boolean>>;
+
+const APP_RULE_IDS = [
+  "strategy",
+  "sso",
+  "techRadar",
+  "certificate",
+] as const satisfies (keyof typeof APP_RULES)[];
+
+/** What the day's tickets have used up, so the day doesn't repeat itself. */
+type Today = {
+  /** Apps already asked for. */
+  apps: Set<string>;
+  /** Catalog apps already named to retire or to offer: each goes at most once a day. */
+  catalog: Set<string>;
+};
+
+/** A catalog app of the area to retire, one nobody else has claimed today if there is one. */
+function pickRetiree(r: Rng, capabilityId: string, today: Today) {
+  const area = CATALOG.filter((c) => c.capabilityId === capabilityId);
+  const free = area.filter((c) => !today.catalog.has(c.name));
+  return r.pick(free.length > 0 ? free : area).name;
+}
+
+/** A ticket that passes every rule there is but the app's own. Flaws are applied on top. */
+function validDemand(
+  a: Archetype,
+  w: World,
+  r: Rng,
+  day: number,
+  ticket: number,
+  today: Today,
+): Demand {
+  const cost = w.price[a.app] ?? a.cost;
+  const date = dayDate(day);
+  const cert = w.certs[a.vendor];
   const attachments: Attachment[] = [
-    { kind: "vendorSheet", vendor: a.vendor, product: a.app, price: cost, sso: true },
-    {
-      kind: "certificate",
-      vendor: a.vendor,
-      standard: r.chance(0.5) ? "ISO/IEC 27001" : "SOC 2 Type II",
-      validUntil: addDays(today, 90 + Math.floor(r.next() * 600)),
-    },
+    { kind: "vendorSheet", vendor: a.vendor, product: a.app, price: cost, sso: a.sso },
   ];
+  if (cert) attachments.push({ kind: "certificate", vendor: a.vendor, ...cert });
   if (cost > BUSINESS_CASE_THRESHOLD || r.chance(0.3))
     attachments.unshift({
       kind: "businessCase",
@@ -81,12 +165,12 @@ function validDemand(a: Archetype, r: Rng, day: number, ticket: number): Demand 
       benefit: a.benefit,
       savings: enoughSavings(cost, r),
     });
-  if (a.monitorsEmployees)
+  if (a.monitorsEmployees || r.chance(DECOY_APPROVAL_CHANCE))
     attachments.push({
       kind: "worksCouncil",
       app: a.app,
       decision: "approved",
-      date: addDays(today, -(3 + Math.floor(r.next() * 40))),
+      date: addDays(date, -(3 + Math.floor(r.next() * 40))),
     });
 
   return {
@@ -100,7 +184,7 @@ function validDemand(a: Archetype, r: Rng, day: number, ticket: number): Demand 
     reason: a.reason,
     sponsor: DEPARTMENT_HEADS[a.capabilityId]?.name ?? null,
     monitorsEmployees: a.monitorsEmployees,
-    retires: r.pick(CATALOG.filter((c) => c.capabilityId === a.capabilityId)).name,
+    retires: pickRetiree(r, a.capabilityId, today),
     attachments,
     matchId: a.matchId,
   };
@@ -113,8 +197,17 @@ function replace(d: Demand, next: Attachment): Attachment[] {
 
 const isFlawRule = (id: RuleId): id is FlawRule => id !== "reuse";
 
-/** How to break each rule. Each changes only what it needs; the rest of the ticket stays valid. */
-const FLAWS: Record<FlawRule, (d: Demand, r: Rng, today: string) => Demand> = {
+const withoutAttachment = (d: Demand, kind: Attachment["kind"]) => ({
+  ...d,
+  attachments: d.attachments.filter((a) => a.kind !== kind),
+});
+
+/**
+ * How to break each rule on the ticket itself. Each changes only what it needs; the rest stays
+ * valid. Rules about the app (`APP_RULES`) are broken by the choice of app instead, apart from
+ * the certificate, which can also just be missing.
+ */
+const FIELD_FLAWS: Partial<Record<FlawRule, (d: Demand, r: Rng, today: Today) => Demand>> = {
   sponsor: (d, r) => {
     const otherHeads = Object.entries(DEPARTMENT_HEADS)
       .filter(([id]) => id !== d.capabilityId)
@@ -123,118 +216,135 @@ const FLAWS: Record<FlawRule, (d: Demand, r: Rng, today: string) => Demand> = {
     return { ...d, sponsor: r.pick([null, r.pick(otherHeads), r.pick(colleagues)]) };
   },
   businessCase: (d, r) => {
-    const cost = roundTo(BUSINESS_CASE_THRESHOLD + 1_000 + r.next() * 30_000, 1_000);
-    const attachments: Attachment[] = d.attachments
-      .map((a) => (a.kind === "vendorSheet" ? { ...a, price: cost } : a))
-      .filter((a) => a.kind !== "businessCase");
     // Mostly a case whose numbers don't add up, so it's worth reading; sometimes none at all.
-    if (r.chance(0.7))
-      attachments.unshift({
-        kind: "businessCase",
-        app: d.app,
-        benefit: ARCHETYPES.find((a) => a.app === d.app)?.benefit ?? "",
-        savings: tooLittleSavings(cost, r),
-      });
-    return { ...d, cost, attachments };
+    const without = withoutAttachment(d, "businessCase");
+    if (!r.chance(0.7)) return without;
+    const benefit = ARCHETYPES.find((a) => a.app === d.app)?.benefit ?? "";
+    const savings = tooLittleSavings(d.cost, r);
+    return {
+      ...without,
+      attachments: [{ kind: "businessCase", app: d.app, benefit, savings }, ...without.attachments],
+    };
   },
   vendorMatch: (d, r) => {
     const sheet = attachment(d, "vendorSheet");
     if (!sheet) return d;
     const which = r.pick(["product", "vendor", "price"] as const);
+    if (which === "price") {
+      // The requester rounds the price down on the ticket; the vendor's quote is the real one.
+      const cut = roundTo(2_000 + r.next() * Math.min(13_000, d.cost / 3), 500);
+      return { ...d, cost: d.cost - cut };
+    }
     const changed =
       which === "product"
         ? { ...sheet, product: `${d.app} ${r.pick(["Pro", "Plus", "Enterprise"])}` }
-        : which === "vendor"
-          ? { ...sheet, vendor: r.pick(TECH_RADAR.adopt.filter((v) => v !== d.vendor)) }
-          : { ...sheet, price: d.cost + roundTo(2_000 + r.next() * 15_000, 500) };
+        : { ...sheet, vendor: r.pick(TECH_RADAR.adopt.filter((v) => v !== d.vendor)) };
     return { ...d, attachments: replace(d, changed) };
   },
-  certificate: (d, r, today) => {
-    const cert = attachment(d, "certificate");
-    if (!cert || r.chance(0.25))
-      return { ...d, attachments: d.attachments.filter((a) => a.kind !== "certificate") };
-    const validUntil = addDays(today, -(1 + Math.floor(r.next() * 120)));
-    return { ...d, attachments: replace(d, { ...cert, validUntil }) };
-  },
-  // Broken by picking an archetype outside the focus areas instead.
-  strategy: (d) => d,
-  sso: (d) => {
-    const sheet = attachment(d, "vendorSheet");
-    return sheet ? { ...d, attachments: replace(d, { ...sheet, sso: false }) } : d;
-  },
-  techRadar: (d, r) => {
-    const vendor = r.pick(TECH_RADAR.hold);
-    const attachments = d.attachments.map((a) =>
-      a.kind === "vendorSheet" || a.kind === "certificate" ? { ...a, vendor } : a,
-    );
-    return { ...d, vendor, attachments };
-  },
+  certificate: (d) => withoutAttachment(d, "certificate"),
   worksCouncil: (d, r) => {
     const approval = attachment(d, "worksCouncil");
     const how = r.pick(["missing", "rejected", "otherApp"] as const);
-    if (how === "missing" || !approval)
-      return { ...d, attachments: d.attachments.filter((a) => a.kind !== "worksCouncil") };
+    if (how === "missing" || !approval) return withoutAttachment(d, "worksCouncil");
     const changed =
       how === "rejected"
         ? { ...approval, decision: "rejected" as const }
         : { ...approval, app: r.pick(ARCHETYPES.filter((a) => a.app !== d.app)).app };
     return { ...d, attachments: replace(d, changed) };
   },
-  retire: (d, r) => {
-    const otherArea = CATALOG.filter((c) => c.capabilityId !== d.capabilityId);
-    return { ...d, retires: r.pick([null, r.pick(otherArea).name, r.pick(MADE_UP_APPS)]) };
+  retire: (d, r, today) => {
+    const otherArea = CATALOG.filter(
+      (c) => c.capabilityId !== d.capabilityId && !today.catalog.has(c.name),
+    );
+    const options = [
+      null,
+      r.pick(MADE_UP_APPS),
+      ...(otherArea.length ? [r.pick(otherArea).name] : []),
+    ];
+    return { ...d, retires: r.pick(options) };
   },
 };
 
-const applyFlaw = (d: Demand, rule: FlawRule, r: Rng, day: number) =>
-  FLAWS[rule](d, r, dayDate(day));
-
 /**
- * One new ticket for `day`. `used` holds the apps already asked for today, so the same request
- * doesn't come in twice.
+ * Apps a ticket may be for: passing every app rule in force, except `flaw`, which it fails.
+ * A broken business case needs an app pricey enough to need one; broken works council
+ * approval, an app that tracks employees.
  */
-function generateDemand(r: Rng, day: number, ticket: number, used: Set<string>): Demand {
-  const fresh = (list: Archetype[]) => {
-    const unused = list.filter((a) => !used.has(a.app));
-    return unused.length > 0 ? unused : list;
-  };
+function candidates(w: World, day: number, flaw: FlawRule | null, certExpired: boolean) {
+  const today = dayDate(day);
+  return ARCHETYPES.filter((a) => {
+    if (a.matchId) return false;
+    for (const id of APP_RULE_IDS) {
+      if (!isInForce(id, day)) continue;
+      const shouldFail = id === flaw && (id !== "certificate" || certExpired);
+      if (APP_RULES[id](a, w, today) === shouldFail) return false;
+    }
+    if (flaw === "businessCase") return (w.price[a.app] ?? 0) > BUSINESS_CASE_THRESHOLD;
+    if (flaw === "worksCouncil") return a.monitorsEmployees;
+    return true;
+  });
+}
+
+/** The day's tickets so far haven't asked for it yet, if that leaves anything. */
+const fresh = (list: Archetype[], today: Today) => {
+  const unused = list.filter((a) => !today.apps.has(a.app));
+  return unused.length > 0 ? unused : list;
+};
+
+/** One new ticket for `day`. */
+function generateDemand(w: World, r: Rng, day: number, ticket: number, today: Today): Demand {
   const rules = rulesInForce(day);
   const newest = rules.at(-1)!;
   const flawRules = rules.map((rule) => rule.id).filter(isFlawRule);
 
   // From day 6 some requests are for something we already own; the answer is to offer it.
-  if (isInForce("reuse", day) && r.chance(newest.id === "reuse" ? 0.4 : 0.2)) {
-    const demand = validDemand(r.pick(fresh(ARCHETYPES.filter((a) => a.matchId))), r, day, ticket);
-    // Half of them also break a rule, as bait: offering is still right.
-    return r.chance(0.5) ? applyFlaw(demand, r.pick(flawRules), r, day) : demand;
+  const owned = ARCHETYPES.filter(
+    (a) => a.matchId && !today.catalog.has(CATALOG.find((c) => c.id === a.matchId)?.name ?? ""),
+  );
+  if (isInForce("reuse", day) && owned.length && r.chance(newest.id === "reuse" ? 0.4 : 0.2)) {
+    const a = r.pick(fresh(owned, today));
+    const demand = validDemand(a, w, r, day, ticket, today);
+    // Half of them also break a rule on the ticket, as bait: offering is still right.
+    const bait = flawRules.filter((id) => FIELD_FLAWS[id] && id !== "worksCouncil");
+    const flaw = r.chance(0.5) && bait.length ? r.pick(bait) : null;
+    return flaw ? FIELD_FLAWS[flaw]!(demand, r, today) : demand;
   }
 
-  const flaw = r.chance(FLAW_CHANCE)
+  let flaw = r.chance(FLAW_CHANCE)
     ? isFlawRule(newest.id) && r.chance(NEWEST_RULE_CHANCE)
       ? newest.id
       : r.pick(flawRules)
     : null;
+  // A broken certificate is an expired one when some vendor's has run out, else a missing one.
+  let certExpired = flaw === "certificate" && r.chance(0.7);
+  let apps = candidates(w, day, flaw, certExpired);
+  if (apps.length === 0 && certExpired) {
+    certExpired = false;
+    apps = candidates(w, day, flaw, certExpired);
+  }
+  if (apps.length === 0) {
+    flaw = null;
+    apps = candidates(w, day, null, false);
+  }
 
-  const strategyInForce = isInForce("strategy", day);
-  const candidates = ARCHETYPES.filter(
-    (a) =>
-      !a.matchId &&
-      (flaw === "strategy" ? !isFocus(a) : !strategyInForce || isFocus(a)) &&
-      (flaw !== "worksCouncil" || a.monitorsEmployees),
-  );
-  const demand = validDemand(r.pick(fresh(candidates)), r, day, ticket);
-  return flaw ? applyFlaw(demand, flaw, r, day) : demand;
+  const demand = validDemand(r.pick(fresh(apps, today)), w, r, day, ticket, today);
+  const breakField = flaw && !(flaw === "certificate" && certExpired) && FIELD_FLAWS[flaw];
+  return breakField ? breakField(demand, r, today) : demand;
 }
 
 /** New tickets for every day of the run. */
 export function generateDays(seed: number): Demand[][] {
   const r = rng(seed);
+  const world = makeWorld(r);
   let ticket = 1001;
   return Array.from({ length: LAST_DAY }, (_, i) => {
-    const used = new Set<string>();
+    const today: Today = { apps: new Set(), catalog: new Set() };
     return Array.from({ length: DEMANDS_PER_DAY }, () => {
-      const demand = generateDemand(r, i + 1, ticket++, used);
-      used.add(demand.app);
+      const demand = generateDemand(world, r, i + 1, ticket++, today);
+      today.apps.add(demand.app);
+      if (demand.retires) today.catalog.add(demand.retires);
+      const offered = CATALOG.find((c) => c.id === demand.matchId);
+      if (offered) today.catalog.add(offered.name);
       return demand;
     });
   });

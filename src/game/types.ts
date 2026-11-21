@@ -105,6 +105,8 @@ export type GameState = {
   /** Every decision this run. */
   log: Resolution[];
   findings: number;
+  /** Catalog apps (by name) switched off this run, in return for an approved app. */
+  retired: string[];
   /** Whether coffee with the auditor closed a finding today. */
   forgivenToday: boolean;
   /** New requests for every day, generated when the run starts. */

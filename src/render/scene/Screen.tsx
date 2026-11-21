@@ -68,6 +68,7 @@ export function Screen({
       <ScreenWindow id="rulebook" label="Rulebook" {...win}>
         <Rulebook
           day={state.day}
+          retired={state.retired}
           canOffer={!!demand && !resolution && isInForce("reuse", state.day)}
           onOffer={(appId) => on.onDecide({ kind: "offer", appId })}
         />

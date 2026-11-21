@@ -1,15 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 
-import {
-  CAPABILITIES,
-  CATALOG,
-  capabilityName,
-  DEPARTMENT_HEADS,
-  STRATEGY,
-  TECH_RADAR,
-} from "@/game/data";
-import { rulesInForce } from "@/game/rules";
+import { CAPABILITIES, capabilityName, DEPARTMENT_HEADS, STRATEGY, TECH_RADAR } from "@/game/data";
+import { activeCatalog, rulesInForce } from "@/game/rules";
 import { cn } from "@/lib/utils";
 
 import { departmentColor } from "../departments";
@@ -29,10 +22,13 @@ type TabId = (typeof TABS)[number]["id"];
 /** The policy binder: today's rules and the reference pages they point to. */
 export function Rulebook({
   day,
+  retired,
   canOffer,
   onOffer,
 }: {
   day: number;
+  /** Catalog apps switched off this run: gone from the catalog. */
+  retired: readonly string[];
   /** Whether there's an undecided request to offer an app for. */
   canOffer: boolean;
   onOffer: (appId: string) => void;
@@ -112,23 +108,25 @@ export function Rulebook({
             <section key={c.id} className="mb-3">
               <p className="office-label">{c.name}</p>
               <ul>
-                {CATALOG.filter((a) => a.capabilityId === c.id).map((app) => (
-                  <li key={app.id} className="office-app-card">
-                    <b className="flex items-center gap-2">
-                      <AppIcon name={app.name} />
-                      {app.name}
-                    </b>
-                    <p className="office-desc">{app.description}</p>
-                    <button
-                      className="office-offer"
-                      disabled={!canOffer}
-                      onClick={() => onOffer(app.id)}
-                    >
-                      Offer instead
-                      <ChevronRight />
-                    </button>
-                  </li>
-                ))}
+                {activeCatalog(retired)
+                  .filter((a) => a.capabilityId === c.id)
+                  .map((app) => (
+                    <li key={app.id} className="office-app-card">
+                      <b className="flex items-center gap-2">
+                        <AppIcon name={app.name} />
+                        {app.name}
+                      </b>
+                      <p className="office-desc">{app.description}</p>
+                      <button
+                        className="office-offer"
+                        disabled={!canOffer}
+                        onClick={() => onOffer(app.id)}
+                      >
+                        Offer instead
+                        <ChevronRight />
+                      </button>
+                    </li>
+                  ))}
               </ul>
             </section>
           ))}

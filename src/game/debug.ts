@@ -42,8 +42,8 @@ const MINUTES_PER_TICKET =
 const RUSHED_MINUTES_PER_TICKET = 30;
 
 /** The right call on a ticket, or a wrong one. */
-function call(demand: Demand, day: number, right: boolean): Decision {
-  const v = verdict(demand, day);
+function call(demand: Demand, game: GameState, right: boolean): Decision {
+  const v = verdict(demand, game.day, game.retired);
   if (right) return v.kind === "decline" ? { kind: "decline" } : v;
   return v.kind === "approve" ? { kind: "decline" } : { kind: "approve" };
 }
@@ -91,7 +91,7 @@ export function seedRun(options: SeedOptions = {}): GameState {
       if (!demand) break;
       const rushed = phase === "coffee" && game.day === day;
       game = tick(game, rushed ? RUSHED_MINUTES_PER_TICKET : MINUTES_PER_TICKET);
-      game = next(decide(game, call(demand, game.day, made < firstWrong)));
+      game = next(decide(game, call(demand, game, made < firstWrong)));
       made++;
     }
   }

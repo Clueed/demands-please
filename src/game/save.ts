@@ -1,7 +1,7 @@
 import type { GameState } from "./types";
 
 /** Bump when `GameState` changes shape, so an old save starts a new run instead of breaking. */
-const VERSION = 2;
+const VERSION = 3;
 /** Where runs are kept. Debug runs have their own slot, so they leave the real run alone. */
 export type Slot = "run" | "debug";
 const key = (slot: Slot) => `demands-pls:${slot}`;

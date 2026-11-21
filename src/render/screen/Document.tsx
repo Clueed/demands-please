@@ -52,7 +52,11 @@ export function Document({ attachment: a, demand }: { attachment: Attachment; de
       <div className="office-doc office-certificate">
         <p className="office-label">Certificate</p>
         <p className="office-doc-head">{a.standard}</p>
-        <p className="office-muted">Information security management</p>
+        <p className="office-muted">
+          {a.standard === "ISO/IEC 27001"
+            ? "Information security management"
+            : "Independent audit of security controls"}
+        </p>
         <p className="mt-2">issued to</p>
         <b>{a.vendor}</b>
         <p className="mt-2">

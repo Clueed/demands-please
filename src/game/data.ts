@@ -31,7 +31,7 @@ export const STAFF: Record<string, { name: string; role: string }[]> = {
   ],
   hr: [
     { name: "Aylin Demir", role: "HR Business Partner" },
-    { name: "Felix Hahn", role: "Team Lead, Support" },
+    { name: "Felix Hahn", role: "Payroll Specialist" },
     { name: "Mira Schulz", role: "Recruiter" },
   ],
   manufacturing: [
@@ -145,7 +145,10 @@ export type Archetype = {
   benefit: string;
   /** Typical price per year; each ticket varies it a little. */
   cost: number;
+  /** Tracks what employees do: their calls, whereabouts, hours or chats. Never said outright. */
   monitorsEmployees: boolean;
+  /** Supports single sign-on. A property of the app, so the same on every ticket. */
+  sso: boolean;
   /** The catalog app that already does this, or null. */
   matchId: string | null;
 };
@@ -160,6 +163,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Keeps customers coming back.",
     cost: 12_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "campaign-hub",
   },
   {
@@ -170,6 +174,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "No more double calls to the same customer.",
     cost: 26_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "pipetrack",
   },
   {
@@ -180,6 +185,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "A steady stream of posts without weekend work.",
     cost: 6_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "social-scheduler",
   },
   {
@@ -190,6 +196,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Receipts arrive in days instead of weeks.",
     cost: 8_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "spendly",
   },
   {
@@ -200,6 +207,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Overspending shows up before the quarter ends.",
     cost: 15_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "budgetboard",
   },
   {
@@ -210,6 +218,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Hires in weeks, not months.",
     cost: 20_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "hire-funnel",
   },
   {
@@ -220,6 +229,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "No more understaffed weeks.",
     cost: 5_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "timeoff-tracker",
   },
   {
@@ -230,6 +240,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "New hires find the right people on day one.",
     cost: 9_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "peoplebase",
   },
   {
@@ -240,6 +251,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Fewer rush orders for parts we already have.",
     cost: 15_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "partskeeper",
   },
   {
@@ -250,6 +262,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Defects traced back to their batch in minutes.",
     cost: 18_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "qualitycheck",
   },
   {
@@ -260,6 +273,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Line stoppages spotted right away.",
     cost: 40_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: "lineview",
   },
 
@@ -272,16 +286,18 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Quotes go out the same day.",
     cost: 32_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
     app: "WebinarDeck",
-    vendor: "Brightline Apps",
+    vendor: "LockStep Software AG",
     capabilityId: "sales-marketing",
     reason: "Marketing wants to run product webinars for up to 500 people.",
     benefit: "Reaches customers we can't visit in person.",
     cost: 9_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
@@ -292,6 +308,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "New online sales channel.",
     cost: 45_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
@@ -302,6 +319,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "New reps learn from the best calls.",
     cost: 22_000,
     monitorsEmployees: true,
+    sso: true,
     matchId: null,
   },
   {
@@ -312,6 +330,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Shorter routes, more visits per day.",
     cost: 14_000,
     monitorsEmployees: true,
+    sso: true,
     matchId: null,
   },
   {
@@ -322,6 +341,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Prototypes in days instead of weeks.",
     cost: 30_000,
     monitorsEmployees: false,
+    sso: false,
     matchId: null,
   },
   {
@@ -332,16 +352,18 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Repairs planned before machines fail.",
     cost: 38_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
     app: "EnergyMeter",
-    vendor: "Voltaic Labs",
+    vendor: "Monolith Systems",
     capabilityId: "manufacturing",
     reason: "Our power bill doubled and nobody knows which machines use the most.",
     benefit: "Cuts the energy bill.",
     cost: 11_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
@@ -352,6 +374,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Every shift fully staffed.",
     cost: 16_000,
     monitorsEmployees: true,
+    sso: true,
     matchId: null,
   },
   {
@@ -362,6 +385,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "No more parcels sent to the wrong address.",
     cost: 7_000,
     monitorsEmployees: false,
+    sso: false,
     matchId: null,
   },
   {
@@ -372,16 +396,18 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Risky contract clauses caught before signing.",
     cost: 40_000,
     monitorsEmployees: false,
+    sso: false,
     matchId: null,
   },
   {
     app: "TaxRadar",
-    vendor: "Fiskal Software",
+    vendor: "Legacy Logic Ltd",
     capabilityId: "finance",
     reason: "We now sell in nine countries and VAT rules keep changing.",
     benefit: "No more late VAT filings.",
     cost: 13_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
@@ -392,6 +418,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Cash position at a glance every morning.",
     cost: 28_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
   {
@@ -402,6 +429,7 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Training tracked for every employee.",
     cost: 12_000,
     monitorsEmployees: false,
+    sso: false,
     matchId: null,
   },
   {
@@ -412,16 +440,18 @@ export const ARCHETYPES: Archetype[] = [
     benefit: "Spot burnout before people quit.",
     cost: 10_000,
     monitorsEmployees: true,
+    sso: true,
     matchId: null,
   },
   {
     app: "BenefitsHub",
-    vendor: "Brightline Apps",
+    vendor: "DataHoard Inc.",
     capabilityId: "hr",
     reason: "Employees email HR to ask about bike leasing and pension plans.",
     benefit: "Fewer emails to HR.",
     cost: 8_000,
     monitorsEmployees: false,
+    sso: true,
     matchId: null,
   },
 ];

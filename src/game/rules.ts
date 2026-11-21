@@ -29,9 +29,10 @@ export type Rule = {
   text: string;
   /**
    * Why a request breaks this rule, or null if it doesn't. Checked against the date it's
-   * decided on, so an old ticket can go stale overnight. Reuse has no check: it's judged apart.
+   * decided on, so an old ticket can go stale overnight. `retired` holds the catalog apps
+   * already switched off this run. Reuse has no check: it's judged apart.
    */
-  check?: (demand: Demand, today: string) => string | null;
+  check?: (demand: Demand, today: string, retired: readonly string[]) => string | null;
 };
 
 /** The first attachment of a kind, typed. */
@@ -135,7 +136,7 @@ export const RULES: Rule[] = [
     id: "worksCouncil",
     day: 9,
     title: "Works council",
-    text: "Apps that monitor employees need the works council's approval attached.",
+    text: "Apps that track what employees do (their calls, whereabouts, hours or chats) need the works council's approval attached.",
     check: (d) => {
       if (!d.monitorsEmployees) return null;
       const approval = attachment(d, "worksCouncil");
@@ -152,10 +153,11 @@ export const RULES: Rule[] = [
     day: 10,
     title: "One in, one out",
     text: "Every new app must retire an app from the same area in the catalog.",
-    check: (d) => {
+    check: (d, _today, retired) => {
       if (!d.retires) return "The ticket doesn't name an app to retire.";
       const app = CATALOG.find((a) => a.name === d.retires);
       if (!app) return `${d.retires} isn't in the catalog.`;
+      if (retired.includes(app.name)) return `${d.retires} was already retired.`;
       if (app.capabilityId !== d.capabilityId)
         return `${d.retires} belongs to ${capabilityName(app.capabilityId)}, not ${capabilityName(d.capabilityId)}.`;
       return null;
@@ -183,19 +185,30 @@ export type Verdict =
   | { kind: "approve" }
   | { kind: "decline"; reasons: string[] };
 
+/** Catalog apps still in use: the catalog minus those retired this run. */
+export const activeCatalog = (retired: readonly string[]) =>
+  CATALOG.filter((a) => !retired.includes(a.name));
+
 /** The right call on a request, by the rules in force on `day`. */
-export function verdict(demand: Demand, day: number): Verdict {
-  if (demand.matchId && isInForce("reuse", day)) return { kind: "offer", appId: demand.matchId };
+export function verdict(demand: Demand, day: number, retired: readonly string[] = []): Verdict {
+  const owned = activeCatalog(retired).some((a) => a.id === demand.matchId);
+  if (owned && demand.matchId && isInForce("reuse", day))
+    return { kind: "offer", appId: demand.matchId };
   const today = dayDate(day);
-  const reasons = rulesInForce(day).flatMap((r) => r.check?.(demand, today) ?? []);
+  const reasons = rulesInForce(day).flatMap((r) => r.check?.(demand, today, retired) ?? []);
   return reasons.length ? { kind: "decline", reasons } : { kind: "approve" };
 }
 
 const appName = (id: string) => CATALOG.find((a) => a.id === id)?.name ?? id;
 
 /** Why a decision was wrong, or null if it was right. */
-export function judge(demand: Demand, decision: Decision, day: number): string | null {
-  const right = verdict(demand, day);
+export function judge(
+  demand: Demand,
+  decision: Decision,
+  day: number,
+  retired: readonly string[] = [],
+): string | null {
+  const right = verdict(demand, day, retired);
 
   if (right.kind === "offer") {
     if (decision.kind === "offer" && decision.appId === right.appId) return null;
