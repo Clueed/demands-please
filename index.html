@@ -1,16 +1,126 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Primary -->
+    <title>Demands, Please – a pixel-art game about approving software requests</title>
+    <meta
+      name="description"
+      content="Run your company's IT demand desk for 10 days. Check org charts, business cases, vendors and policy memos, then approve or decline every software request before shadow IT takes over. Free in your browser."
+    />
+    <meta
+      name="keywords"
+      content="Demands Please, browser game, pixel art game, desk game, paperwork game, document inspection game, IT management game, demand management, software requests, shadow IT, compliance, audit, enterprise architecture, office game, free online game"
+    />
+    <meta name="author" content="demands-pls" />
+    <meta name="application-name" content="Demands, Please" />
+    <meta name="generator" content="Vite" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="format-detection" content="telephone=no, email=no, address=no" />
+    <link rel="canonical" href="%SITE_URL%/" />
+    <link rel="alternate" hreflang="en" href="%SITE_URL%/" />
+    <link rel="alternate" hreflang="x-default" href="%SITE_URL%/" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- Icons and app -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#20332f" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>demands-pls</title>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Demands" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="msapplication-TileColor" content="#20332f" />
+    <meta name="msapplication-TileImage" content="/icon-192.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Demands, Please" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:title" content="Demands, Please" />
+    <meta
+      property="og:description"
+      content="Approve or decline every software request at the IT demand desk. Follow the rules, beat the backlog, survive the audit."
+    />
+    <meta property="og:image" content="%SITE_URL%/og-image.png" />
+    <meta property="og:image:secure_url" content="%SITE_URL%/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Pixel-art office desk: a monitor shows a software request with Approve and Decline buttons while an employee waits holding a ticket."
+    />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Demands, Please" />
+    <meta
+      name="twitter:description"
+      content="Approve or decline every software request at the IT demand desk. Follow the rules, beat the backlog, survive the audit."
+    />
+    <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Pixel-art office desk: a monitor shows a software request with Approve and Decline buttons while an employee waits holding a ticket."
+    />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "%SITE_URL%/#website",
+            "url": "%SITE_URL%/",
+            "name": "Demands, Please",
+            "inLanguage": "en"
+          },
+          {
+            "@type": ["VideoGame", "WebApplication"],
+            "@id": "%SITE_URL%/#game",
+            "url": "%SITE_URL%/",
+            "name": "Demands, Please",
+            "description": "A pixel-art desk game about running a company's IT demand process. For 10 days, check each software request against the org chart, business cases, vendors and a growing rulebook, then approve or decline it before the backlog turns into shadow IT.",
+            "image": "%SITE_URL%/og-image.png",
+            "screenshot": "%SITE_URL%/og-image.png",
+            "thumbnailUrl": "%SITE_URL%/icon-512.png",
+            "genre": ["Simulation", "Puzzle", "Paperwork"],
+            "gamePlatform": "Web browser",
+            "playMode": "SinglePlayer",
+            "numberOfPlayers": { "@type": "QuantitativeValue", "value": 1 },
+            "applicationCategory": "GameApplication",
+            "applicationSubCategory": "Simulation game",
+            "operatingSystem": "Any",
+            "browserRequirements": "Requires JavaScript",
+            "inLanguage": "en",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "isPartOf": { "@id": "%SITE_URL%/#website" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
+    <noscript>
+      <h1>Demands, Please</h1>
+      <p>
+        A pixel-art desk game about approving and declining software requests at your company's IT
+        demand desk. Turn on JavaScript to play.
+      </p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

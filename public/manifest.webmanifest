@@ -1,8 +1,15 @@
 {
+  "id": "/",
   "name": "Demands, Please",
   "short_name": "Demands",
+  "description": "A pixel-art desk game about approving and declining software requests at the IT demand desk.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "landscape",
+  "categories": ["games", "entertainment"],
   "background_color": "#20332f",
   "theme_color": "#20332f",
   "icons": [
@@ -21,6 +28,15 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "A software request waiting for approval at the IT demand desk"
     }
   ]
 }

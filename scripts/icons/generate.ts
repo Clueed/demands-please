@@ -23,10 +23,18 @@ const files: Record<string, string | Buffer> = {
   "icon-maskable-512.png": encodePng(rasterize(padded(ART, 4), PALETTE, 512, solid)),
   "manifest.webmanifest": `${JSON.stringify(
     {
+      id: "/",
       name: "Demands, Please",
       short_name: "Demands",
+      description:
+        "A pixel-art desk game about approving and declining software requests at the IT demand desk.",
+      lang: "en",
+      dir: "ltr",
       start_url: "/",
+      scope: "/",
       display: "standalone",
+      orientation: "landscape",
+      categories: ["games", "entertainment"],
       background_color: BACKGROUND,
       theme_color: BACKGROUND,
       icons: [
@@ -37,6 +45,15 @@ const files: Record<string, string | Buffer> = {
           sizes: "512x512",
           type: "image/png",
           purpose: "maskable",
+        },
+      ],
+      screenshots: [
+        {
+          src: "/og-image.png",
+          sizes: "1200x630",
+          type: "image/png",
+          form_factor: "wide",
+          label: "A software request waiting for approval at the IT demand desk",
         },
       ],
     },
