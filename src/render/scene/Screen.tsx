@@ -1,4 +1,4 @@
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 import { currentDemand, currentResolution } from "@/game/engine";
 import { isInForce, visibleAttachments } from "@/game/rules";
@@ -40,6 +40,15 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
     setFilesFor(demand?.id);
     dispatch({ type: "closeAttachments" });
   }
+
+  // Escape puts away the file on top, like closing its window.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dispatch({ type: "closeTopAttachment" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const waiting = Math.max(0, state.queue.length - (resolution ? 1 : 0));
   // Less than an hour per visitor still waiting: the line won't be through by closing time.

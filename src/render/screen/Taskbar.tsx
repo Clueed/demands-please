@@ -1,5 +1,5 @@
 import { RotateCcw } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { clock } from "@/game/time";
 
@@ -21,6 +21,14 @@ export function Taskbar({
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <footer className="office-taskbar">

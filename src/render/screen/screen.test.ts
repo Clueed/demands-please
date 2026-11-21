@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { REGIONS } from "../layout";
 
-import { clampPointer, initialScreen, MIN_VISIBLE, screenReducer } from "./screen";
+import {
+  clampPointer,
+  initialScreen,
+  MIN_VISIBLE,
+  screenReducer,
+  TASKBAR_H,
+  TITLE_H,
+} from "./screen";
 
 describe("clampPointer", () => {
   const { x, y, w, h } = REGIONS.screen;
@@ -31,7 +38,7 @@ describe("screenReducer", () => {
     expect(initialScreen().order).toEqual(["rulebook", "ticket"]);
   });
 
-  it("moves a window, letting it hang off the screen", () => {
+  it("moves a window, letting it hang off the left and bottom", () => {
     const screen = initialScreen();
 
     const moved = screenReducer(screen, { type: "move", id: "ticket", x: 10, y: 20 });
@@ -41,21 +48,18 @@ describe("screenReducer", () => {
     expect(hanging.windows.ticket).toMatchObject({ x: -40, y: 200 });
   });
 
-  it("always keeps a strip of the window on screen to grab it back", () => {
+  it("keeps the title bar and close button on screen", () => {
     const screen = initialScreen();
-    const ticket = screen.windows.ticket;
+    const doc = screen.windows.vendorSheet;
 
-    const farAway = screenReducer(screen, { type: "move", id: "ticket", x: 9999, y: 9999 });
-    expect(farAway.windows.ticket).toMatchObject({
-      x: REGIONS.screen.w - MIN_VISIBLE,
-      y: REGIONS.screen.h - MIN_VISIBLE,
+    const farAway = screenReducer(screen, { type: "move", id: "vendorSheet", x: 9999, y: 9999 });
+    expect(farAway.windows.vendorSheet).toMatchObject({
+      x: REGIONS.screen.w - doc.w,
+      y: REGIONS.screen.h - TASKBAR_H - TITLE_H,
     });
 
-    const farBack = screenReducer(screen, { type: "move", id: "ticket", x: -9999, y: -9999 });
-    expect(farBack.windows.ticket).toMatchObject({
-      x: MIN_VISIBLE - ticket.w,
-      y: MIN_VISIBLE - ticket.h,
-    });
+    const farBack = screenReducer(screen, { type: "move", id: "vendorSheet", x: -9999, y: -9999 });
+    expect(farBack.windows.vendorSheet).toMatchObject({ x: MIN_VISIBLE - doc.w, y: 0 });
   });
 
   it("snaps to whole game pixels", () => {
@@ -88,5 +92,24 @@ describe("screenReducer", () => {
     expect(screenReducer(screen, { type: "closeAttachments" }).order).toEqual(
       initialScreen().order,
     );
+  });
+
+  it("opens the next ticket's files where they started", () => {
+    let screen = screenReducer(initialScreen(), { type: "raise", id: "vendorSheet" });
+    screen = screenReducer(screen, { type: "move", id: "vendorSheet", x: 0, y: 100 });
+    screen = screenReducer(screen, { type: "closeAttachments" });
+    expect(screen.windows).toEqual(initialScreen().windows);
+  });
+
+  it("closes the attachment on top with Escape, then the next, then nothing", () => {
+    let screen = screenReducer(initialScreen(), { type: "raise", id: "vendorSheet" });
+    screen = screenReducer(screen, { type: "raise", id: "certificate" });
+    screen = screenReducer(screen, { type: "raise", id: "ticket" });
+
+    screen = screenReducer(screen, { type: "closeTopAttachment" });
+    expect(screen.order).toEqual(["rulebook", "vendorSheet", "ticket"]);
+    screen = screenReducer(screen, { type: "closeTopAttachment" });
+    expect(screen.order).toEqual(["rulebook", "ticket"]);
+    expect(screenReducer(screen, { type: "closeTopAttachment" })).toBe(screen);
   });
 });

@@ -41,11 +41,15 @@ export type ScreenAction =
   | { type: "move"; id: WindowId; x: number; y: number }
   | { type: "raise"; id: WindowId }
   | { type: "close"; id: WindowId }
-  /** Put away every attachment, e.g. when the next ticket comes in. */
+  /** Close the attachment on top, if any: what Escape does. */
+  | { type: "closeTopAttachment" }
+  /** Put away every attachment and reset where they open, e.g. when the next ticket comes in. */
   | { type: "closeAttachments" };
 
-/** How much of a window (game pixels, each way) always stays on the screen, to grab it back. */
+/** How much of a window (game pixels) always stays on screen past the left edge, to grab it back. */
 export const MIN_VISIBLE = 16;
+/** Height of a window's title bar, border included. It never leaves the desktop. */
+export const TITLE_H = 15;
 
 const ATTACHMENT_WINDOWS: WindowId[] = [
   "businessCase",
@@ -55,15 +59,16 @@ const ATTACHMENT_WINDOWS: WindowId[] = [
 ];
 
 /**
- * Let a window hang off the screen, but keep at least `MIN_VISIBLE` of it on screen,
- * snapped to whole game pixels.
+ * Let a window hang off the left and bottom of the screen, snapped to whole game pixels.
+ * Its title bar always stays on the desktop and its right end (with the close button) on
+ * screen, so it can always be grabbed and closed.
  */
 function clampToScreen(win: Rect, x: number, y: number): Rect {
-  const { w, h } = REGIONS.screen;
+  const { w } = REGIONS.screen;
   return {
     ...win,
-    x: clamp(Math.round(x), MIN_VISIBLE - win.w, w - MIN_VISIBLE),
-    y: clamp(Math.round(y), MIN_VISIBLE - win.h, h - MIN_VISIBLE),
+    x: clamp(Math.round(x), MIN_VISIBLE - win.w, w - win.w),
+    y: clamp(Math.round(y), 0, DESK_H - TITLE_H),
   };
 }
 
@@ -93,6 +98,13 @@ export function screenReducer(state: ScreenState, action: ScreenAction): ScreenS
     if (!state.order.includes(action.id)) return state;
     return { ...state, order: state.order.filter((id) => id !== action.id) };
   }
-  if (!state.order.some((id) => ATTACHMENT_WINDOWS.includes(id))) return state;
-  return { ...state, order: state.order.filter((id) => !ATTACHMENT_WINDOWS.includes(id)) };
+  if (action.type === "closeTopAttachment") {
+    const top = state.order.findLast((id) => ATTACHMENT_WINDOWS.includes(id));
+    return top ? screenReducer(state, { type: "close", id: top }) : state;
+  }
+  // Each ticket's files open where they first did, wherever the last ones were dragged.
+  const start = initialScreen().windows;
+  const windows = { ...state.windows };
+  for (const id of ATTACHMENT_WINDOWS) windows[id] = start[id];
+  return { windows, order: state.order.filter((id) => !ATTACHMENT_WINDOWS.includes(id)) };
 }
