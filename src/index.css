@@ -841,6 +841,49 @@
   font-weight: 600;
 }
 
+/* Paused: the monitor goes dark but for the time it stopped at, and a slow hint. */
+.office-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--gp) * 3);
+  background: #16211f;
+  color: #7f978d;
+  cursor: pointer;
+  z-index: 150;
+  animation: office-lock-in 400ms steps(4) both;
+}
+.office-lock-clock {
+  font-size: calc(var(--gp) * 24);
+  line-height: 1;
+  color: #a9bdb1;
+}
+.office-lock-hint {
+  margin-top: calc(var(--gp) * 6);
+  color: #5d736a;
+  animation: office-lock-hint 4s steps(8) infinite;
+}
+@keyframes office-lock-in {
+  from {
+    background: #6c8079;
+    clip-path: inset(48% 0);
+  }
+}
+@keyframes office-lock-hint {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .office-lock,
+  .office-lock-hint {
+    animation: none;
+  }
+}
+
 /* App icon tiles: one art pixel per game pixel, kept crisp. */
 .office-app-icon {
   display: inline-block;
@@ -987,6 +1030,16 @@
 }
 .fidget-led.is-poked {
   animation: fidget-blink 400ms steps(1) 3;
+}
+/* Standby: amber, breathing slowly while the monitor is off. */
+.fidget-led-standby {
+  cursor: pointer;
+  animation: led-breathe 4s steps(8) infinite;
+}
+@keyframes led-breathe {
+  50% {
+    opacity: 0.35;
+  }
 }
 
 @keyframes idle-steam {

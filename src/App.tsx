@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 
 import {
   currentDemand,
@@ -113,18 +113,25 @@ function useSaveRun(game: GameState) {
 export function App() {
   const [{ game, round }, dispatch] = useReducer(reducer, undefined, resumeGame);
   const demand = currentDemand(game);
+  // Paused is the monitor switched off: the power light or the start menu toggle it.
+  const [paused, setPaused] = useState(false);
+  const togglePause = () => setPaused((p) => !p);
 
-  useGameClock(game.phase === "working", dispatch);
+  useGameClock(game.phase === "working" && !paused, dispatch);
   useSaveRun(game);
 
   return (
     <Stage>
       <Room
+        paused={paused}
+        onPower={togglePause}
         visitor={<Visitor demand={demand} ticket={demand?.ticket ?? ""} />}
         screen={
           <Screen
             key={round}
             state={game}
+            paused={paused}
+            onPause={togglePause}
             onDecide={(decision) => dispatch({ type: "decide", decision })}
             onNext={() => dispatch({ type: "next" })}
             onStart={() => dispatch({ type: "start" })}

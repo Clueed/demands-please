@@ -1,4 +1,4 @@
-import { RotateCcw } from "lucide-react";
+import { Power, RotateCcw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { clock } from "@/game/time";
@@ -8,16 +8,19 @@ const ORB = "M2 0h4v1h1v1h1v4h-1v1h-1v1H2v-1H1v-1H0V2h1V1h1Z";
 const ORB_SHINE = "M2 2h2v1H3v1H2Z";
 
 /**
- * The dock along the bottom of the screen: the start orb (its menu restarts the game) on the
+ * The dock along the bottom of the screen: the start orb (its menu pauses or restarts the game) on the
  * left, whatever the game shows in the middle, and the clock on the right.
  */
 export function Taskbar({
   minutes,
   onRestart,
+  onPause,
   children,
 }: {
   minutes: number;
   onRestart: () => void;
+  /** Switches the monitor off, same as its power light. */
+  onPause: () => void;
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,6 +52,16 @@ export function Taskbar({
           {/* Clicking anywhere else closes the menu. */}
           <div className="fixed inset-0" onClick={() => setMenuOpen(false)} />
           <div className="office-start-menu" role="menu">
+            <button
+              role="menuitem"
+              className="office-menu-item"
+              onClick={() => {
+                setMenuOpen(false);
+                onPause();
+              }}
+            >
+              <Power aria-hidden="true" /> Take a break
+            </button>
             <button
               role="menuitem"
               className="office-menu-item"

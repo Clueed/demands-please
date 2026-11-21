@@ -21,7 +21,18 @@ const snap = (n: number) => Math.round(n / ART_PX) * ART_PX;
  * Every prop is snapped to the shared art grid and drawn from the same slightly-above view:
  * a top face, a front edge, and a shadow down and to the left.
  */
-export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNode }) {
+export function Room({
+  visitor,
+  screen,
+  paused,
+  onPower,
+}: {
+  visitor: ReactNode;
+  screen: ReactNode;
+  /** The monitor is off: the power light turns amber and breathes, like standby. */
+  paused: boolean;
+  onPower: () => void;
+}) {
   const fit = useFit();
   const room = roomLayout(fit);
   const { width, height } = fit;
@@ -146,8 +157,29 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           fill="#1f2b2a"
         />
         <rect x={monitor.x} y={monitorBottom - 2} width={monitor.w} height="2" fill="#2a3635" />
-        <Fidget kind="led" transform="" label="Power light">
-          <rect x={monitorRight - 18} y={monitorBottom - 8} width="4" height="2" fill="#b8c998" />
+        <Fidget
+          kind={paused ? "led-standby" : "led"}
+          transform=""
+          label={
+            paused ? "Power light. Press to wake the monitor." : "Power light. Press for a break."
+          }
+          onPoke={onPower}
+        >
+          {/* A bigger, invisible hit area around the tiny light. */}
+          <rect
+            x={monitorRight - 22}
+            y={monitorBottom - 10}
+            width="12"
+            height="6"
+            fill="transparent"
+          />
+          <rect
+            x={monitorRight - 18}
+            y={monitorBottom - 8}
+            width="4"
+            height="2"
+            fill={paused ? "#d9a55a" : "#b8c998"}
+          />
         </Fidget>
         <rect x={monitorRight - 30} y={monitorBottom - 8} width="8" height="2" fill="#45524e" />
 

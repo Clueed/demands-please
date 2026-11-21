@@ -43,6 +43,7 @@ export function Fidget({
   transform,
   label,
   bounds,
+  onPoke,
   children,
 }: {
   kind: string;
@@ -53,6 +54,8 @@ export function Fidget({
    * (the mouse on its pad), marked by a `fidget-surface` shape inside it. Leave out to make the prop pokeable but fixed in place.
    */
   bounds?: DeskBounds | "parent";
+  /** Called on every tap, for props that do something besides wiggle. */
+  onPoke?: () => void;
   children: ReactNode | ((pokes: number) => ReactNode);
 }) {
   const [pokes, setPokes] = useState(0);
@@ -125,7 +128,9 @@ export function Fidget({
           if (!d || d.pointer !== e.pointerId) return;
           drag.current = null;
           setDragging(false);
-          if (!d.moved) setPokes((n) => n + 1);
+          if (d.moved) return;
+          setPokes((n) => n + 1);
+          onPoke?.();
         }}
         onPointerCancel={() => {
           drag.current = null;

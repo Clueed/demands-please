@@ -7,6 +7,7 @@ import type { AttachmentKind, Decision, GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
 import { DayOverlay } from "../screen/DayOverlay";
+import { LockScreen } from "../screen/LockScreen";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
 import { Rulebook } from "../screen/Rulebook";
@@ -21,10 +22,15 @@ export type ScreenHandlers = {
   onStart: () => void;
   onNextDay: () => void;
   onRestart: () => void;
+  onPause: () => void;
 };
 
 /** The service desk workstation: ticket, rulebook and any files opened. */
-export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) {
+export function Screen({
+  state,
+  paused,
+  ...on
+}: { state: GameState; paused: boolean } & ScreenHandlers) {
   const [screen, dispatch] = useReducer(screenReducer, undefined, initialScreen);
   const demand = currentDemand(state);
   const resolution = currentResolution(state);
@@ -44,11 +50,11 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
   // Escape puts away the file on top, like closing its window.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dispatch({ type: "closeTopAttachment" });
+      if (e.key === "Escape" && !paused) dispatch({ type: "closeTopAttachment" });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [paused]);
 
   const waiting = Math.max(0, state.queue.length - (resolution ? 1 : 0));
   // Less than an hour per visitor still waiting: the line won't be through by closing time.
@@ -98,7 +104,7 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
             </ScreenWindow>
           ))}
 
-      <Taskbar minutes={state.clock} onRestart={on.onRestart}>
+      <Taskbar minutes={state.clock} onRestart={on.onRestart} onPause={on.onPause}>
         <span className="office-tray" title="Open audit findings">
           Findings
           <span className="office-pips" aria-label={`${state.findings} of ${FINDINGS_LIMIT}`}>
@@ -122,6 +128,7 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
           onRestart={on.onRestart}
         />
       )}
+      {paused && <LockScreen minutes={state.clock} onWake={on.onPause} />}
     </div>
   );
 }
