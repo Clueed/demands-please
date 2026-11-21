@@ -192,7 +192,7 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           <Px d="M2 0h76l2 4H0Z" fill="#5d6d66" />
           <text
             x="40"
-            y="14"
+            y="12"
             textAnchor="middle"
             fontFamily="'Pixelify Plain', monospace"
             fontSize="7"
