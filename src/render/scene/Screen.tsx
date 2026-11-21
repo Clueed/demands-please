@@ -1,4 +1,3 @@
-import { RotateCcw } from "lucide-react";
 import { useReducer, useState } from "react";
 
 import { currentDemand, currentResolution, schedule } from "@/game/engine";
@@ -15,6 +14,7 @@ import { Rulebook } from "../screen/Rulebook";
 import { initialScreen, screenReducer } from "../screen/screen";
 import { ScreenWindow } from "../screen/ScreenWindow";
 import { Ticket } from "../screen/Ticket";
+import { Taskbar } from "../screen/Taskbar";
 
 /** How long, in game minutes, the "mistake cleared" notice stays up. */
 const NOTICE_MINUTES = 90;
@@ -97,8 +97,7 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
             </ScreenWindow>
           ))}
 
-      <footer className="office-taskbar">
-        <span className="office-start">DeskOS</span>
+      <Taskbar minutes={state.clock} onRestart={on.onRestart}>
         <span className="office-tray" title="Mistakes on record">
           Mistakes
           <span className="office-pips" aria-label={`${state.mistakes} of ${MAX_MISTAKES}`}>
@@ -114,11 +113,7 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
           Backlog {backlog}/{BACKLOG_LIMIT}
         </span>
         {forgiven && <span className="office-notice">An hour early: mistake cleared</span>}
-        <span className="flex-1" />
-        <button className="office-taskbar-button" onClick={on.onRestart} title="Start over">
-          <RotateCcw aria-hidden="true" /> Restart
-        </button>
-      </footer>
+      </Taskbar>
       {state.phase !== "working" && (
         <DayOverlay
           state={state}

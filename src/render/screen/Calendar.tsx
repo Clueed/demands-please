@@ -1,6 +1,6 @@
 import { Clock } from "lucide-react";
 
-import { clock, dayDate, formatDay } from "@/game/time";
+import { dayDate, formatDay } from "@/game/time";
 import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,6 @@ export function Calendar({ state, onPush }: { state: GameState; onPush: () => vo
     <>
       <div className="office-toolbar flex items-baseline justify-end gap-2">
         <span>{formatDay(dayDate(state.day))}</span>
-        <b className="office-number">{clock(state.clock)}</b>
       </div>
       <div className="relative mx-2 mt-2 shrink-0" style={{ height: gamePx(TIMELINE_H) }}>
         {t.hours.map((h) => (

@@ -801,29 +801,6 @@
   box-shadow: 0 calc(var(--gp) * -1) 0 #2f4740;
   color: var(--ink);
 }
-.office-start {
-  padding: 0 calc(var(--gp) * 2);
-  color: var(--ink-soft);
-  font-weight: 600;
-  line-height: calc(var(--gp) * 9);
-}
-.office-taskbar-button {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(var(--gp) * 2);
-  padding: 0 calc(var(--gp) * 3);
-  line-height: calc(var(--gp) * 9);
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-.office-taskbar-button:hover {
-  color: var(--ink);
-  text-decoration: underline;
-}
-.office-taskbar-button svg {
-  width: calc(var(--gp) * 6);
-  height: calc(var(--gp) * 6);
-}
 
 .office-tray {
   display: inline-flex;
@@ -861,4 +838,70 @@
 }
 .office-close:hover {
   color: #f3c4b6;
+}
+
+/* The start orb: a pixel circle, raised like a button. */
+.office-start {
+  display: grid;
+  place-items: center;
+  width: calc(var(--gp) * 12);
+  height: calc(var(--gp) * 12);
+  cursor: pointer;
+}
+.office-start svg {
+  width: calc(var(--gp) * 8);
+  height: calc(var(--gp) * 8);
+}
+.office-orb {
+  fill: var(--green);
+}
+.office-orb-shine {
+  fill: #a9c39b;
+}
+.office-start:hover .office-orb,
+.office-start[aria-expanded="true"] .office-orb {
+  fill: #3f6555;
+}
+/* A start menu, Windows-style: a banner down the left, the options beside it. */
+.office-start-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--gp));
+  display: flex;
+  min-width: calc(var(--gp) * 96);
+  background: var(--paper);
+  border: calc(var(--gp) * 2) solid var(--frame);
+  box-shadow: calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #1d302c66;
+}
+.office-start-menu::before {
+  content: "DeskOS";
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: calc(var(--gp) * 3) calc(var(--gp) * 2);
+  background: #3f6555;
+  color: #f2efd8;
+  font-weight: 600;
+  letter-spacing: calc(var(--gp) * 0.5);
+}
+.office-menu-item {
+  display: flex;
+  align-items: center;
+  align-self: flex-end;
+  flex: 1;
+  gap: calc(var(--gp) * 3);
+  padding: calc(var(--gp) * 3) calc(var(--gp) * 4);
+  color: var(--ink);
+  cursor: pointer;
+}
+.office-menu-item:hover {
+  background: #3f6555;
+  color: #f2efd8;
+}
+.office-menu-item svg {
+  width: calc(var(--gp) * 6);
+  height: calc(var(--gp) * 6);
+}
+.office-clock {
+  padding-right: calc(var(--gp) * 2);
+  font-weight: 600;
 }
