@@ -14,7 +14,8 @@
     "format:check": "oxfmt --check",
     "test": "vitest",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && vitest run",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm build && wrangler deploy",
+    "icons": "node scripts/icons/generate.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

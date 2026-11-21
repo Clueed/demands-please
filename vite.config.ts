@@ -14,6 +14,6 @@ export default defineConfig({
   },
   server: { host: true, allowedHosts: true },
   test: {
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["{src,scripts}/**/*.test.{ts,tsx}"],
   },
 });
