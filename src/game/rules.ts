@@ -5,6 +5,8 @@ import { dayDate, formatDate } from "./time";
 import type { Attachment, AttachmentKind, Decision, Demand } from "./types";
 
 export const BUSINESS_CASE_THRESHOLD = 25_000;
+/** A business case must save this many times the annual cost, to pay for the rollout too. */
+export const BUSINESS_CASE_MULTIPLE = 5;
 
 export type RuleId =
   | "sponsor"
@@ -55,11 +57,16 @@ export const RULES: Rule[] = [
     id: "businessCase",
     day: 2,
     title: "Business case",
-    text: `Requests over ${money(BUSINESS_CASE_THRESHOLD)} a year need a business case attached.`,
-    check: (d) =>
-      d.cost > BUSINESS_CASE_THRESHOLD && !attachment(d, "businessCase")
-        ? `Over ${money(BUSINESS_CASE_THRESHOLD)} a year without a business case.`
-        : null,
+    text: `Requests over ${money(BUSINESS_CASE_THRESHOLD)} a year need a business case that saves at least ${BUSINESS_CASE_MULTIPLE}× the annual cost.`,
+    check: (d) => {
+      if (d.cost <= BUSINESS_CASE_THRESHOLD) return null;
+      const bc = attachment(d, "businessCase");
+      if (!bc) return `Over ${money(BUSINESS_CASE_THRESHOLD)} a year without a business case.`;
+      const needed = d.cost * BUSINESS_CASE_MULTIPLE;
+      return bc.savings < needed
+        ? `The business case saves ${money(bc.savings)} a year; it needs ${money(needed)}, ${BUSINESS_CASE_MULTIPLE}× the cost.`
+        : null;
+    },
   },
   {
     id: "vendorMatch",

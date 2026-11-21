@@ -8,7 +8,14 @@ import {
   TECH_RADAR,
   type Archetype,
 } from "./data";
-import { attachment, BUSINESS_CASE_THRESHOLD, isInForce, rulesInForce, type RuleId } from "./rules";
+import {
+  attachment,
+  BUSINESS_CASE_MULTIPLE,
+  BUSINESS_CASE_THRESHOLD,
+  isInForce,
+  rulesInForce,
+  type RuleId,
+} from "./rules";
 import { addDays, dayDate, DEMANDS_PER_DAY, LAST_DAY } from "./time";
 import type { Attachment, Demand } from "./types";
 
@@ -42,9 +49,21 @@ type FlawRule = Exclude<RuleId, "reuse">;
 const isFocus = (a: Archetype) => STRATEGY.focus.includes(a.capabilityId);
 const roundTo = (n: number, step: number) => Math.round(n / step) * step;
 
+/** Savings that clear the bar, by up to half again, so the check isn't always a close call. */
+const enoughSavings = (cost: number, r: Rng) =>
+  Math.ceil((cost * BUSINESS_CASE_MULTIPLE * (1 + r.next() * 0.5)) / 1_000) * 1_000;
+
+/** Savings that look healthy but miss the bar: between 2× and just under the multiple. */
+function tooLittleSavings(cost: number, r: Rng) {
+  const needed = cost * BUSINESS_CASE_MULTIPLE;
+  const savings =
+    Math.floor((cost * (2 + r.next() * (BUSINESS_CASE_MULTIPLE - 2))) / 1_000) * 1_000;
+  return Math.min(savings, needed - 1_000);
+}
+
 /** A ticket that passes every rule there is. Flaws are applied on top. */
 function validDemand(a: Archetype, r: Rng, day: number, ticket: number): Demand {
-  const cost = roundTo(a.cost * (0.8 + r.next() * 0.4), 500);
+  const cost = roundTo(a.cost * (0.8 + r.next() * 0.4), 1_000);
   const today = dayDate(day);
   const attachments: Attachment[] = [
     { kind: "vendorSheet", vendor: a.vendor, product: a.app, price: cost, sso: true },
@@ -56,7 +75,12 @@ function validDemand(a: Archetype, r: Rng, day: number, ticket: number): Demand 
     },
   ];
   if (cost > BUSINESS_CASE_THRESHOLD || r.chance(0.3))
-    attachments.unshift({ kind: "businessCase", app: a.app, benefit: a.benefit });
+    attachments.unshift({
+      kind: "businessCase",
+      app: a.app,
+      benefit: a.benefit,
+      savings: enoughSavings(cost, r),
+    });
   if (a.monitorsEmployees)
     attachments.push({
       kind: "worksCouncil",
@@ -99,10 +123,18 @@ const FLAWS: Record<FlawRule, (d: Demand, r: Rng, today: string) => Demand> = {
     return { ...d, sponsor: r.pick([null, r.pick(otherHeads), r.pick(colleagues)]) };
   },
   businessCase: (d, r) => {
-    const cost = roundTo(BUSINESS_CASE_THRESHOLD + 1_000 + r.next() * 30_000, 500);
-    const attachments = d.attachments
-      .filter((a) => a.kind !== "businessCase")
-      .map((a) => (a.kind === "vendorSheet" ? { ...a, price: cost } : a));
+    const cost = roundTo(BUSINESS_CASE_THRESHOLD + 1_000 + r.next() * 30_000, 1_000);
+    const attachments: Attachment[] = d.attachments
+      .map((a) => (a.kind === "vendorSheet" ? { ...a, price: cost } : a))
+      .filter((a) => a.kind !== "businessCase");
+    // Mostly a case whose numbers don't add up, so it's worth reading; sometimes none at all.
+    if (r.chance(0.7))
+      attachments.unshift({
+        kind: "businessCase",
+        app: d.app,
+        benefit: ARCHETYPES.find((a) => a.app === d.app)?.benefit ?? "",
+        savings: tooLittleSavings(cost, r),
+      });
     return { ...d, cost, attachments };
   },
   vendorMatch: (d, r) => {

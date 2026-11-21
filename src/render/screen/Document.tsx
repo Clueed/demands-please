@@ -24,6 +24,10 @@ export function Document({ attachment: a, demand }: { attachment: Attachment; de
           <Row label="App" value={<b>{a.app}</b>} />
           <Row label="Need" value={demand.reason} />
           <Row label="Benefit" value={a.benefit} />
+          <Row
+            label="Savings"
+            value={<span className="office-number">{money(a.savings)} / year</span>}
+          />
         </dl>
       </div>
     );

@@ -106,6 +106,24 @@ describe("rules", () => {
     expect(verdict(ticket, 6).kind).toBe("decline");
   });
 
+  it("a business case must save five times the annual cost", () => {
+    const sheet = { ...valid().attachments[0]!, price: 30_000 } as const;
+    const withCase = (savings: number) =>
+      valid({
+        cost: 30_000,
+        attachments: [
+          { kind: "businessCase", app: "PriceWise", benefit: "b", savings },
+          sheet,
+          valid().attachments[1]!,
+        ],
+      });
+    expect(verdict(withCase(150_000), 2).kind).toBe("approve");
+    expect(judge(withCase(149_000), { kind: "approve" }, 2)).toMatch(/needs €150,000/);
+    expect(judge(valid({ cost: 30_000, attachments: [sheet] }), { kind: "approve" }, 2)).toMatch(
+      /without a business case/,
+    );
+  });
+
   it("are ten, one per day", () => {
     expect(RULES.map((r) => r.day)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });

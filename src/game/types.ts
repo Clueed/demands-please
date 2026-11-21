@@ -18,6 +18,8 @@ export type Attachment =
       kind: "businessCase";
       app: string;
       benefit: string;
+      /** What the app is expected to save per year. */
+      savings: number;
     }
   | {
       kind: "vendorSheet";
