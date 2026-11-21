@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { FACES, rectStyle, REGIONS, roomLayout } from "../layout";
 import { useFit } from "../stageFitContext";
 import { ART_PX } from "./pixel";
+import { Fidget } from "./Fidget";
+import { Keyboard } from "./Keyboard";
 import { Px } from "./Px";
 
 const FONT = "'Office Pixel', 'Geist Variable', monospace";
@@ -33,6 +35,8 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
   const drop = snap(Math.max(0, (height - 360) / 2));
   const at = (x: number, y: number) => `translate(${snap(x)} ${snap(y)})`;
   const foot = FACES.standFoot;
+  /** Props can be pushed anywhere on the desk top, back edge to front. */
+  const desk = { left: 0, right: width, top: deskBack + 4, bottom: height - 8 };
 
   return (
     <>
@@ -133,14 +137,22 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           fill="#1f2b2a"
         />
         <rect x={monitor.x} y={monitorBottom - 2} width={monitor.w} height="2" fill="#2a3635" />
-        <rect x={monitorRight - 18} y={monitorBottom - 8} width="4" height="2" fill="#b8c998" />
+        <Fidget kind="led" transform="" label="Power light">
+          <rect x={monitorRight - 18} y={monitorBottom - 8} width="4" height="2" fill="#b8c998" />
+        </Fidget>
         <rect x={monitorRight - 30} y={monitorBottom - 8} width="8" height="2" fill="#45524e" />
 
         {/* A sticky note taped to the chin, the department's whole policy. */}
-        <g transform={at(monitorRight - 118, monitorBottom - 10)}>
+        <Fidget
+          kind="note"
+          bounds={desk}
+          transform={at(monitorRight - 118, monitorBottom - 10)}
+          label="A sticky note. It says no."
+        >
           <Px d="M0 2L26 0v22L6 24 0 18Z" fill="#cdbb86" />
           <Px d="M0 2L26 0v4L0 6Z" fill="#b8a670" />
-          <Px d="M0 18h6v6Z" fill="#a8975f" />
+          <Px d="M0 18h6v6Z" fill="#a8975f" className="fx-keep" />
+          <Px d="M0 16h8v8H4Z" fill="#e0d29e" className="fx fx-curl" />
           {/* A strip of tape holding it to the chin */}
           <Px d="M6 -2h14v6H6Z" fill="#d9d6c2" />
           <Px d="M6 2h14v2H6Z" fill="#b9b6a2" />
@@ -155,38 +167,64 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           >
             NO.
           </text>
-        </g>
+        </Fidget>
 
         {/* In-tray, overflowing, in front of the monitor. */}
-        <g transform={at(monitor.x + 10, deskBack + 4)}>
+        <Fidget
+          kind="tray"
+          bounds={desk}
+          transform={at(monitor.x + 10, deskBack + 4)}
+          label="The in-tray. Still overflowing."
+        >
           <Px d="M-8 14h72l4 12H-12Z" fill={SHADOW} />
           <Px d="M4 -4h52l4 10H0Z" fill="#ddd6bb" />
-          <Px d="M2 0h56l4 10H-2Z" fill="#e8e1c8" />
-          <Px d="M8 2h30v2H8Zm2 4h24v2H10Z" fill="#aaa88f" />
-          <Px d="M40 -6h16l2 8H38Z" fill="#cdbb86" />
+          <g className="fx-sheet">
+            <Px d="M2 0h56l4 10H-2Z" fill="#e8e1c8" />
+            <Px d="M8 2h30v2H8Zm2 4h24v2H10Z" fill="#aaa88f" />
+          </g>
+          <Px d="M40 -6h16l2 8H38Z" fill="#cdbb86" className="fx-tab" />
           <Px d="M0 10h68l4 12H-4Z" fill="#4c5d57" />
           <Px d="M0 10h68v2H0Z" fill="#6c7e75" />
           <Px d="M26 14h16v6H26Z" fill="#d9d4ba" />
           <text x="34" y="19" textAnchor="middle" fontFamily={FONT} fontSize="5" fill="#3c4b46">
             IN
           </text>
-        </g>
+        </Fidget>
 
         {/* A plant that gave up some time ago: a pot seen from above, one stem bent over. */}
-        <g transform={at(monitor.x + 88, deskBack - 12)}>
-          <Px d="M0 32h20l-2 4H-4Z" fill={SHADOW} />
-          <Px d="M0 16h24v6h-2l-2 12H4L2 22H0Z" fill="#4a3127" />
-          <Px d="M2 18h20v4H2Z" fill="#b07d5f" />
-          <Px d="M4 18h16v2H4Z" fill="#5a4130" />
-          <Px d="M4 22h16l-2 10H6Z" fill="#9a6a4f" />
-          <Px d="M14 22h4l-2 10h-2Z" fill="#865a43" />
-          <Px d="M10 6h2v12h-2Zm2-2h6v2h-6Zm6 2h2v4h-2Z" fill="#6b6a45" />
-          <Px d="M18 10h4v6h-2v-2h-2ZM6 8h4v2H8v4H6Z" fill="#8a8650" />
-          <Px d="M12 6h4v2h2v4h-2v-2h-2Z" fill="#9a9358" />
-        </g>
+        <Fidget
+          kind="plant"
+          bounds={desk}
+          transform={at(monitor.x + 88, deskBack - 12)}
+          label="A plant, mostly"
+        >
+          {(pokes) => (
+            <>
+              <Px d="M0 32h20l-2 4H-4Z" fill={SHADOW} />
+              <Px d="M0 16h24v6h-2l-2 12H4L2 22H0Z" fill="#4a3127" />
+              <Px d="M2 18h20v4H2Z" fill="#b07d5f" />
+              <Px d="M4 18h16v2H4Z" fill="#5a4130" />
+              <Px d="M4 22h16l-2 10H6Z" fill="#9a6a4f" />
+              <Px d="M14 22h4l-2 10h-2Z" fill="#865a43" />
+              <g className="fx-stem">
+                <Px d="M10 6h2v12h-2Zm2-2h6v2h-6Zm6 2h2v4h-2Z" fill="#6b6a45" />
+                <Px d="M18 10h4v6h-2v-2h-2ZM6 8h4v2H8v4H6Z" fill="#8a8650" />
+                <Px d="M12 6h4v2h2v4h-2v-2h-2Z" fill="#9a9358" />
+              </g>
+              {pokes > 0 && pokes % 3 === 0 && (
+                <Px d="M18 10h4v2h-4Z" fill="#a39c5c" className="fx fx-leaf" />
+              )}
+            </>
+          )}
+        </Fidget>
 
         {/* Nameplate: its top face and the front, facing the visitor. */}
-        <g transform={at(18, 334 + drop)}>
+        <Fidget
+          kind="nameplate"
+          bounds={desk}
+          transform={at(18, 334 + drop)}
+          label="Your nameplate"
+        >
           <Px d="M-8 14h86l-2 6H-12Z" fill={SHADOW} />
           <Px d="M0 4h80l4 12H-4Z" fill="#3c4b46" />
           <Px d="M2 0h76l2 4H0Z" fill="#5d6d66" />
@@ -200,55 +238,49 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           >
             DEMANDS, PLEASE
           </text>
-        </g>
+        </Fidget>
 
-        {/* Keyboard: top face with keys, a dark front edge. */}
-        <g transform={at(128, deskBack + 30 + drop)}>
-          <Px d="M-4 4h188l8 22H-12Z" fill={SHADOW} />
-          <Px d="M-8 18h204v4H-8Z" fill="#283634" />
-          <Px d="M0 0h188l8 18H-8Z" fill="#53615a" />
-          <Px d="M0 0h188v2H0Z" fill="#879084" />
-          <Px
-            d={[0, 1, 2]
-              .flatMap((row) =>
-                Array.from(
-                  { length: 14 },
-                  (_, key) => `M${4 + key * 10 - row * 2} ${2 + row * 4}h8v2h-8Z`,
-                ),
-              )
-              .join("")}
-            fill="#b9c0aa"
-          />
-          <Px
-            d={[0, 1, 2]
-              .flatMap((row) =>
-                [0, 1, 2].map((key) => `M${152 + key * 10 - row * 2} ${2 + row * 4}h8v2h-8Z`),
-              )
-              .join("")}
-            fill="#a6b39e"
-          />
-          <Px d="M38 14h74v2H38Z" fill="#a6b39e" />
-          <Px d="M180 2h2v2h-2Z" fill="#b7ce91" />
-        </g>
+        <Fidget
+          kind="keyboard"
+          bounds={desk}
+          transform={at(128, deskBack + 30 + drop)}
+          label="Keyboard"
+        >
+          <Keyboard />
+        </Fidget>
 
-        {/* Mouse pad and mouse. */}
-        <g transform={at(352, deskBack + 26 + drop)}>
+        {/* Mouse pad, pushed around the desk, and the mouse, pushed around the pad. */}
+        <Fidget
+          kind="pad"
+          bounds={desk}
+          transform={at(352, deskBack + 26 + drop)}
+          label="Mouse pad"
+        >
           <Px d="M-4 4h62l12 26H-12Z" fill={SHADOW} />
           <Px d="M0 0h62l12 26H-8Z" fill="#566961" />
-          <Px d="M0 2h60l10 22H-6Z" fill="#61756a" />
-          <Px d="M18 20h4v4h14v2H18Z" fill="#46574f" />
-          <Px d="M24 4h12v2h2v2h2v12h-2v2h-2v2H24v-2h-2v-2h-2V8h2V6h2Z" fill="#3a4744" />
-          <Px d="M24 6h12v2h2v12h-2v2H24v-2h-2V8h2Z" fill="#8a978a" />
-          <Px d="M22 12h16v2H22Zm8-6h2v6h-2Z" fill="#4f5f57" />
-          <Px d="M24 8h4v2h-4Z" fill="#b3bea9" />
-        </g>
+          <Px d="M0 2h60l10 22H-6Z" fill="#61756a" className="fidget-surface" />
+          <Fidget kind="mouse" bounds="parent" transform="" label="Mouse">
+            <Px d="M18 20h4v4h14v2H18Z" fill="#46574f" />
+            <Px d="M24 4h12v2h2v2h2v12h-2v2h-2v2H24v-2h-2v-2h-2V8h2V6h2Z" fill="#3a4744" />
+            <Px d="M24 6h12v2h2v12h-2v2H24v-2h-2V8h2Z" fill="#8a978a" />
+            <Px d="M22 12h16v2H22Zm8-6h2v6h-2Z" fill="#4f5f57" />
+            <Px d="M24 8h4v2h-4Z" fill="#b3bea9" />
+            <Px d="M24 6h6v6h-6Z" fill="#6f7c70" className="fx fx-click" />
+            <Px d="M30 8h2v2h-2Z" fill="#c9d3bd" className="fx fx-wheel" />
+          </Fidget>
+        </Fidget>
 
         {/* Yesterday's coffee ring, half under the mug. */}
         <g transform={at(430, deskBack + 32 + drop)}>
           <Px d="M2 0h8v2H2ZM0 2h2v6H0Zm2 6h6v2H2Z" fill="#b39468" />
         </g>
         {/* Your mug, seen from above: rim and coffee on top, handle on the side. */}
-        <g transform={at(440, deskBack + 16 + drop)}>
+        <Fidget
+          kind="mug"
+          bounds={desk}
+          transform={at(440, deskBack + 16 + drop)}
+          label="Coffee. Cold."
+        >
           <Px d="M-6 22h24v4H-6Z" fill={SHADOW} />
           <Px d="M18 6h8v14h-8Z" fill="#4a3127" />
           <Px d="M20 8h4v10h-4Z" fill="#7a4a3e" />
@@ -261,25 +293,45 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           <Px d="M4 2h6v2H4Z" fill="#6b4a3a" />
           <Px d="M4 10h8v6H4Z" fill="#e5dec3" />
           <Px d="M6 12h4v2H6Z" fill="#9e6656" />
-        </g>
+          <Px d="M6 2h4v2H6Z" fill="#8a5d48" className="fx fx-ripple" />
+          <Px d="M4 -6h2v4H4Zm2 -4h2v4H6Z" fill="#ece8d8" className="fx fx-steam-a" />
+          <Px d="M12 -4h2v4h-2Zm-2 -4h2v4h-2Z" fill="#ece8d8" className="fx fx-steam-b" />
+        </Fidget>
         {/* A pen. */}
-        <g transform={at(392, deskBack + 62 + drop)}>
-          <Px d="M-2 4h38v2H-2Z" fill={SHADOW} />
-          <Px d="M0 0h34v4H0Z" fill="#3c4b46" />
-          <Px d="M0 0h10v4H0Z" fill="#9e6656" />
-          <Px d="M34 0h4v4h-4Z" fill="#d8d3b4" />
-          <Px d="M38 2h2v2h-2Z" fill="#3c4b46" />
-        </g>
+        <Fidget
+          kind="pen"
+          bounds={desk}
+          transform={at(392, deskBack + 62 + drop)}
+          label="A pen. Click."
+        >
+          {(pokes) => (
+            <>
+              <Px d="M-2 4h38v2H-2Z" fill={SHADOW} />
+              <Px d="M0 0h34v4H0Z" fill="#3c4b46" />
+              <Px d="M0 0h10v4H0Z" fill="#9e6656" />
+              <Px d="M34 0h4v4h-4Z" fill="#d8d3b4" />
+              {pokes % 2 === 1 && <Px d="M38 2h2v2h-2Z" fill="#3c4b46" />}
+            </>
+          )}
+        </Fidget>
         {/* Today's declined forms, stamped and stacked on your side. */}
-        <g transform={at(officeX + 70, deskBack + 28 + drop)}>
+        <Fidget
+          kind="forms"
+          bounds={desk}
+          transform={at(officeX + 70, deskBack + 28 + drop)}
+          label="Declined forms"
+        >
           <Px d="M-10 18h62l2 6H-12Z" fill={SHADOW} />
           <Px d="M2 6h52l4 12H-2Z" fill="#d8d1b6" />
           <Px d="M0 4h52l4 12H-4Z" fill="#e2dbc0" />
-          <Px d="M-2 0h52l4 12H-6Z" fill="#ebe5cd" />
-          <Px d="M4 2h22v2H4Zm-2 4h18v2H2Z" fill="#b5b39a" />
-          <Px d="M30 2h16v2H30Zm0 6h16v2H30ZM30 4h2v4h-2Zm14 0h2v4h-2Z" fill="#9e6656" />
-          <Px d="M34 4h8v4h-8Z" fill="#c69a8a" />
-        </g>
+          <g className="fx-sheet">
+            <Px d="M-2 0h52l4 12H-6Z" fill="#ebe5cd" />
+            <Px d="M4 2h22v2H4Zm-2 4h18v2H2Z" fill="#b5b39a" />
+            <Px d="M30 2h16v2H30Zm0 6h16v2H30ZM30 4h2v4h-2Zm14 0h2v4h-2Z" fill="#9e6656" />
+            <Px d="M34 4h8v4h-8Z" fill="#c69a8a" />
+          </g>
+          <Px d="M28 0h20v12H28Z" fill="#b5544a" className="fx fx-stamp" />
+        </Fidget>
       </svg>
       <div className="absolute overflow-hidden office-display" style={rectStyle(display)}>
         {screen}
