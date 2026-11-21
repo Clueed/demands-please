@@ -2,7 +2,9 @@ import type { GameState } from "./types";
 
 /** Bump when `GameState` changes shape, so an old save starts a new run instead of breaking. */
 const VERSION = 2;
-const KEY = "demands-pls:run";
+/** Where runs are kept. Debug runs have their own slot, so they leave the real run alone. */
+export type Slot = "run" | "debug";
+const key = (slot: Slot) => `demands-pls:${slot}`;
 
 type Storage = Pick<globalThis.Storage, "getItem" | "setItem">;
 
@@ -22,9 +24,9 @@ function isSave(value: unknown): value is Save {
 }
 
 /** The run saved in this browser, or null if there's none or it can't be read. */
-export function loadRun(storage: Storage): GameState | null {
+export function loadRun(storage: Storage, slot: Slot = "run"): GameState | null {
   try {
-    const saved: unknown = JSON.parse(storage.getItem(KEY) ?? "null");
+    const saved: unknown = JSON.parse(storage.getItem(key(slot)) ?? "null");
     if (isSave(saved)) return saved.game;
   } catch {
     // Unreadable save: start over.
@@ -33,9 +35,9 @@ export function loadRun(storage: Storage): GameState | null {
 }
 
 /** Keep the run, so a reload carries on where it was. A full or blocked storage is ignored. */
-export function saveRun(storage: Storage, game: GameState) {
+export function saveRun(storage: Storage, game: GameState, slot: Slot = "run") {
   try {
-    storage.setItem(KEY, JSON.stringify({ version: VERSION, game } satisfies Save));
+    storage.setItem(key(slot), JSON.stringify({ version: VERSION, game } satisfies Save));
   } catch {
     // Playing on without a save beats breaking the game.
   }

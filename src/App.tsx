@@ -1,17 +1,18 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
+import { parseSeed, seedRun, type SeedOptions } from "@/game/debug";
 import {
   currentDemand,
   decide,
   haveCoffee,
-  jumpToDay,
   newGame,
   next,
   nextDay,
   startDay,
   tick,
 } from "@/game/engine";
-import { loadRun, saveRun } from "@/game/save";
+import { verdict } from "@/game/rules";
+import { loadRun, saveRun, type Slot } from "@/game/save";
 import { MS_PER_GAME_MINUTE } from "@/game/time";
 import type { Decision, GameState } from "@/game/types";
 import { Room } from "@/render/scene/Room";
@@ -26,29 +27,47 @@ type Action =
   | { type: "tick"; minutes: number }
   | { type: "nextDay" }
   | { type: "coffee" }
-  | { type: "restart" };
+  | { type: "restart" }
+  /** Swap in a whole run, e.g. a seeded one from the debug console. */
+  | { type: "load"; game: GameState };
 
 /** `round` counts restarts, so presentation state (where windows sit) can start fresh too. */
 type AppState = { game: GameState; round: number };
 
-/**
- * `?day=6` in the URL starts a fresh run there, to playtest later rules. Such a run isn't
- * saved, so it leaves the real one alone.
- */
-const playtestDay = Number(new URLSearchParams(window.location.search).get("day")) || null;
+const query = new URLSearchParams(window.location.search);
 
+/**
+ * Debug mode. `?day=4&ticket=2&findings=1` (see `SeedOptions`) seeds a run at that point;
+ * `?debug` alone carries on with the last debug run. Debug runs save to their own slot, so
+ * the real run is left alone, and `window.demands` drives them from the console.
+ */
+const seedOptions = parseSeed(query);
+const debug = seedOptions !== null || query.has("debug");
+const slot: Slot = debug ? "debug" : "run";
+
+if (seedOptions) {
+  // Down to `?debug`, so a reload carries on with the seeded run rather than seeding again.
+  const url = new URL(window.location.href);
+  url.search = "?debug";
+  window.history.replaceState(null, "", url);
+}
+
+/** A fresh run, or in debug mode a fresh one seeded where the URL said. */
 const startGame = (round = 0): AppState => ({
-  game: jumpToDay(newGame(Math.floor(Math.random() * 2 ** 32)), playtestDay ?? 1),
+  game: seedOptions ? seedRun(seedOptions) : newGame(Math.floor(Math.random() * 2 ** 32)),
   round,
 });
 
-/** Carry on with the saved run, if there is one. There's only ever the one run. */
+/** Carry on with the saved run, if there is one. There's only ever the one run per slot. */
 function resumeGame(): AppState {
-  const saved = playtestDay ? null : loadRun(localStorage);
+  const saved = seedOptions ? null : loadRun(localStorage, slot);
   return saved ? { game: saved, round: 0 } : startGame();
 }
 
-function step(game: GameState, action: Exclude<Action, { type: "restart" }>): GameState {
+function step(
+  game: GameState,
+  action: Exclude<Action, { type: "restart" } | { type: "load" }>,
+): GameState {
   if (action.type === "decide") return decide(game, action.decision);
   if (action.type === "tick") return tick(game, action.minutes);
   const moves = { start: startDay, next, nextDay, coffee: haveCoffee };
@@ -57,6 +76,7 @@ function step(game: GameState, action: Exclude<Action, { type: "restart" }>): Ga
 
 function reducer(state: AppState, action: Action): AppState {
   if (action.type === "restart") return startGame(state.round + 1);
+  if (action.type === "load") return { game: action.game, round: state.round + 1 };
   const game = step(state.game, action);
   return game === state.game ? state : { ...state, game };
 }
@@ -90,7 +110,6 @@ function useSaveRun(game: GameState) {
 
   useEffect(() => {
     latest.current = game;
-    if (playtestDay) return;
     const last = saved.current;
     // A tick only moves the clock; everything else keeps the same objects.
     const onlyClock =
@@ -100,16 +119,58 @@ function useSaveRun(game: GameState) {
       last.game.day === game.day;
     const now = performance.now();
     if (onlyClock && now - last.at < CLOCK_SAVE_MS) return;
-    saveRun(localStorage, game);
+    saveRun(localStorage, game, slot);
     saved.current = { game, at: now };
   }, [game]);
 
   useEffect(() => {
-    if (playtestDay) return undefined;
-    const onLeave = () => saveRun(localStorage, latest.current);
+    const onLeave = () => saveRun(localStorage, latest.current, slot);
     window.addEventListener("pagehide", onLeave);
     return () => window.removeEventListener("pagehide", onLeave);
   }, []);
+}
+
+/** The debug console's handle on the run, as `window.demands`. */
+export type DebugConsole = {
+  /** The run as it stands. */
+  state: () => GameState;
+  /** The right call on the ticket at the desk, with the reasons to decline. */
+  answer: () => ReturnType<typeof verdict> | undefined;
+  /** Replace the run with a seeded one, e.g. `seed({ day: 4, ticket: 2, findings: 1 })`. */
+  seed: (options?: SeedOptions) => GameState;
+};
+
+declare global {
+  interface Window {
+    demands?: DebugConsole;
+  }
+}
+
+/** In debug mode, hands the run to the browser console as `window.demands`. */
+function useDebugConsole(game: GameState, dispatch: (action: Action) => void) {
+  const latest = useRef(game);
+  useEffect(() => {
+    latest.current = game;
+  }, [game]);
+
+  useEffect(() => {
+    if (!debug) return undefined;
+    window.demands = {
+      state: () => latest.current,
+      answer: () => {
+        const demand = currentDemand(latest.current);
+        return demand && verdict(demand, latest.current.day);
+      },
+      seed: (options = {}) => {
+        const seeded = seedRun(options);
+        dispatch({ type: "load", game: seeded });
+        return seeded;
+      },
+    };
+    return () => {
+      delete window.demands;
+    };
+  }, [dispatch]);
 }
 
 export function App() {
@@ -121,28 +182,36 @@ export function App() {
 
   useGameClock(game.phase === "working" && !paused, dispatch);
   useSaveRun(game);
+  useDebugConsole(game, dispatch);
 
   return (
-    <Stage>
-      <Room
-        paused={paused}
-        onPower={togglePause}
-        visitor={<Visitor demand={demand} ticket={demand?.ticket ?? ""} />}
-        screen={
-          <Screen
-            key={round}
-            state={game}
-            paused={paused}
-            onPause={togglePause}
-            onDecide={(decision) => dispatch({ type: "decide", decision })}
-            onNext={() => dispatch({ type: "next" })}
-            onStart={() => dispatch({ type: "start" })}
-            onNextDay={() => dispatch({ type: "nextDay" })}
-            onCoffee={() => dispatch({ type: "coffee" })}
-            onRestart={() => dispatch({ type: "restart" })}
-          />
-        }
-      />
-    </Stage>
+    <>
+      <Stage>
+        <Room
+          paused={paused}
+          onPower={togglePause}
+          visitor={<Visitor demand={demand} ticket={demand?.ticket ?? ""} />}
+          screen={
+            <Screen
+              key={round}
+              state={game}
+              paused={paused}
+              onPause={togglePause}
+              onDecide={(decision) => dispatch({ type: "decide", decision })}
+              onNext={() => dispatch({ type: "next" })}
+              onStart={() => dispatch({ type: "start" })}
+              onNextDay={() => dispatch({ type: "nextDay" })}
+              onCoffee={() => dispatch({ type: "coffee" })}
+              onRestart={() => dispatch({ type: "restart" })}
+            />
+          }
+        />
+      </Stage>
+      {debug && (
+        <div className="pointer-events-none fixed top-0 left-0 z-50 bg-red-600 px-1.5 py-0.5 font-mono text-xs text-white">
+          DEBUG · day {game.day} · {game.phase}
+        </div>
+      )}
+    </>
   );
 }

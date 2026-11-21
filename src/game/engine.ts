@@ -134,9 +134,3 @@ export const summarizeDay = (state: GameState) =>
   summarize(state.log.filter((r) => r.day === state.day));
 
 export const summarizeRun = (state: GameState) => summarize(state.log);
-
-/** Skip straight to a day's briefing with a clean record, for playtesting. */
-export function jumpToDay(state: GameState, day: number): GameState {
-  const d = Math.min(Math.max(1, Math.floor(day)), state.days.length);
-  return { ...state, day: d, queue: state.days[d - 1] ?? [] };
-}

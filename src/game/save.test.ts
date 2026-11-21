@@ -24,6 +24,16 @@ describe("save", () => {
     expect(loadRun(storage)).toEqual(game);
   });
 
+  it("keeps debug runs apart from the real run", () => {
+    const storage = memoryStorage();
+    const real = newGame(1);
+    const debug = newGame(2);
+    saveRun(storage, real);
+    saveRun(storage, debug, "debug");
+    expect(loadRun(storage)).toEqual(real);
+    expect(loadRun(storage, "debug")).toEqual(debug);
+  });
+
   it("ignores a save it can't read or from another version", () => {
     const storage = memoryStorage();
     storage.setItem("demands-pls:run", "{not json");
