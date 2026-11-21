@@ -1,6 +1,6 @@
 /**
- * The app icon, drawn on a 16x16 pixel grid in the office palette: a service-desk ticket
- * with a red "!" stamp, both throwing the same hard offset shadow as the desktop windows.
+ * The app icon, drawn on a 16x16 pixel grid in the office palette: the desk terminal
+ * with a "D" on its screen.
  */
 
 export type Rgba = readonly [number, number, number, number];
@@ -9,11 +9,9 @@ export type Rgba = readonly [number, number, number, number];
 export const PALETTE: Record<string, Rgba> = {
   ".": [0, 0, 0, 0],
   b: hex("#20332f"), // desk at night (--color-neutral-900)
-  s: hex("#172724"), // shadow on the desk
-  p: hex("#e1dfcc"), // ticket paper (--paper-hi)
-  r: hex("#aeb6a1"), // ruled lines (--rule)
-  R: hex("#9e6656"), // stamp (--red)
-  D: hex("#7a4a3e"), // stamp shadow (--red-dk)
+  p: hex("#e1dfcc"), // terminal casing (--paper-hi)
+  g: hex("#557a5c"), // screen
+  G: hex("#cdbb86"), // the "D" on screen
 };
 
 /** Background colour, also used for the web manifest's theme and splash screen. */
@@ -22,19 +20,19 @@ export const BACKGROUND = "#20332f";
 export const ART: readonly string[] = [
   ".bbbbbbbbbbbbbb.",
   "bbbbbbbbbbbbbbbb",
-  "bbppppppppppbbbb",
-  "bbppppppppppsbbb",
-  "bbprrrrrrrppsbbb",
-  "bbppppppppppsbbb",
-  "bbprrrrrppppsbbb",
-  "bbppppppRRRRRRbb",
-  "bbprrrrrRRppRRDb",
-  "bbppppppRRppRRDb",
-  "bbprrrppRRppRRDb",
-  "bbppppppRRRRRRDb",
-  "bbppppppRRppRRDb",
-  "bbppppppRRRRRRDb",
-  "bbbssssssDDDDDDb",
+  "bbppppppppppppbb",
+  "bbpggggggggggpbb",
+  "bbpgggGGGggggpbb",
+  "bbpgggGggGgggpbb",
+  "bbpgggGggGgggpbb",
+  "bbpgggGggGgggpbb",
+  "bbpgggGGGggggpbb",
+  "bbpggggggggggpbb",
+  "bbppppppppppppbb",
+  "bbppppppppppppbb",
+  "bbbbbbppppbbbbbb",
+  "bbbbbbppppbbbbbb",
+  "bbbbppppppppbbbb",
   ".bbbbbbbbbbbbbb.",
 ];
 
