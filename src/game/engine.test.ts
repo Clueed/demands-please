@@ -6,6 +6,7 @@ import {
   currentResolution,
   decide,
   FORGIVE_MINUTES,
+  haveCoffee,
   newGame,
   next,
   nextDay,
@@ -217,12 +218,27 @@ describe("findings", () => {
     expect(s).toMatchObject({ phase: "lost", lostTo: "audit", findings: FINDINGS_LIMIT });
   });
 
-  it("seeing everyone an hour before closing closes one finding", () => {
+  it("seeing everyone an hour before closing leaves time for coffee with the auditor", () => {
     let s = wrong(wrong(tick(working(3), DAY - FORGIVE_MINUTES)));
     expect(s.findings).toBe(2);
     s = approve(s);
+    expect(s).toMatchObject({ phase: "coffee", findings: 2 });
+    expect(nextDay(s)).toBe(s);
+
+    s = haveCoffee(s);
     expect(s).toMatchObject({ phase: "dayEnd", findings: 1, forgivenToday: true });
+    // The latest finding is the one revisited.
+    expect(s.log.map((r) => r.closed)).toEqual([false, true, false]);
+    expect(haveCoffee(s)).toBe(s);
     expect(nextDay(s).forgivenToday).toBe(false);
+  });
+
+  it("coffee on the last day still wins", () => {
+    let s = working(1);
+    for (let day = 1; day < LAST_DAY; day++) s = startDay(nextDay(approve(s)));
+    s = wrong(s);
+    expect(s.phase).toBe("coffee");
+    expect(haveCoffee(s)).toMatchObject({ phase: "won", findings: 0 });
   });
 
   it("less than an hour to spare closes nothing", () => {

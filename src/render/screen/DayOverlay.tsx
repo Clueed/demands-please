@@ -1,14 +1,15 @@
-import { ChevronRight, RotateCcw } from "lucide-react";
+import { Check, ChevronRight, Coffee, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { summarizeDay } from "@/game/engine";
+import { summarizeDay, summarizeRun, type Summary } from "@/game/engine";
 import { RULES } from "@/game/rules";
-import { dayDate, FINDINGS_LIMIT, formatDay, LAST_DAY } from "@/game/time";
-import type { GameState } from "@/game/types";
+import { clock, dayDate, FINDINGS_LIMIT, formatDay, LAST_DAY } from "@/game/time";
+import type { GameState, Resolution } from "@/game/types";
 import { cn } from "@/lib/utils";
 
 import { control } from "../styles";
 import { ENDINGS } from "./endings";
+import { stampOf } from "./stamp";
 
 /**
  * Between visitors: the morning memo, the evening summary, and the end of the run.
@@ -18,11 +19,13 @@ export function DayOverlay({
   state,
   onStart,
   onNextDay,
+  onCoffee,
   onRestart,
 }: {
   state: GameState;
   onStart: () => void;
   onNextDay: () => void;
+  onCoffee: () => void;
   onRestart: () => void;
 }) {
   const date = formatDay(dayDate(state.day));
@@ -57,11 +60,37 @@ export function DayOverlay({
     );
   }
 
+  if (state.phase === "coffee") {
+    const last = state.log.findLast((r) => r.finding && !r.closed);
+    return (
+      <Sheet title={`Finished at ${clock(state.clock)} · ${date}`}>
+        <p className="office-notice self-start">
+          <Coffee aria-hidden="true" /> You finished early.
+        </p>
+        <p>You have some time to grab a coffee with the auditor.</p>
+        <blockquote className="office-quote">
+          “Love the bandwidth you freed up today. Let's take this offline and revisit your last
+          audit finding. Going forward, I think we're aligned on this one, so I'll close it out.”
+        </blockquote>
+        {last && (
+          <p className="office-muted">
+            {last.demand.ticket}, {last.demand.app}: {last.finding}
+          </p>
+        )}
+        <button className={cn(control, "office-next self-end")} onClick={onCoffee}>
+          <Check aria-hidden="true" /> OK
+        </button>
+      </Sheet>
+    );
+  }
+
   if (state.phase === "dayEnd") {
+    const today = summarizeDay(state);
     return (
       <Sheet title={`End of day ${state.day} · ${date}`}>
-        <Stats state={state} />
+        <Stats summary={today} label="today" state={state} />
         <Forgiven state={state} />
+        <WrongCalls wrong={today.wrong} />
         <button className={cn(control, "office-next self-end")} onClick={onNextDay}>
           Next day <ChevronRight aria-hidden="true" />
         </button>
@@ -70,11 +99,13 @@ export function DayOverlay({
   }
 
   const ending = ENDINGS[state.lostTo ?? "won"];
+  const run = summarizeRun(state);
   return (
     <Sheet title={ending.title}>
       <p className="office-label">{ending.from}</p>
       <p>{ending.text(state)}</p>
-      <Stats state={state} />
+      <Stats summary={run} label="this run" state={state} />
+      <WrongCalls wrong={run.wrong} withDay />
       <button className={cn(control, "office-next self-end")} onClick={onRestart}>
         <RotateCcw aria-hidden="true" /> Play again
       </button>
@@ -82,14 +113,19 @@ export function DayOverlay({
   );
 }
 
-function Stats({ state }: { state: GameState }) {
-  const s = summarizeDay(state);
+function Stats({ summary, label, state }: { summary: Summary; label: string; state: GameState }) {
+  const right = summary.decided - summary.wrong.length;
+  const share = summary.decided ? Math.round((right / summary.decided) * 100) : 100;
   return (
     <dl className="office-fields">
-      <dt className="office-label">Decided today</dt>
-      <dd className="office-number">{s.decided}</dd>
-      <dt className="office-label">Findings today</dt>
-      <dd className="office-number">{s.findings}</dd>
+      <dt className="office-label">Decided {label}</dt>
+      <dd className="office-number">{summary.decided}</dd>
+      <dt className="office-label">Right calls</dt>
+      <dd className="office-number">
+        {right} ({share}%)
+      </dd>
+      <dt className="office-label">Findings {label}</dt>
+      <dd className="office-number">{summary.wrong.length}</dd>
       <dt className="office-label">Open findings</dt>
       <dd className="office-number">
         {state.findings} / {FINDINGS_LIMIT}
@@ -101,8 +137,30 @@ function Stats({ state }: { state: GameState }) {
 function Forgiven({ state }: { state: GameState }) {
   return (
     state.forgivenToday && (
-      <p className="office-notice self-start">Everyone seen by 16:00: one finding closed.</p>
+      <p className="office-notice self-start">One finding closed over coffee.</p>
     )
+  );
+}
+
+/** Each wrong call and why: what the auditor wrote up. */
+function WrongCalls({ wrong, withDay = false }: { wrong: Resolution[]; withDay?: boolean }) {
+  if (wrong.length === 0) return null;
+  return (
+    <section aria-label="Audit findings">
+      <p className="office-label">Audit findings</p>
+      <ol className="office-scroll office-findings overflow-y-auto">
+        {wrong.map((r) => (
+          <li key={r.demand.id} data-closed={r.closed}>
+            <span className="office-muted">
+              {withDay && `Day ${r.day} · `}
+              {r.demand.ticket} · {r.demand.app} · {stampOf(r)}
+              {r.closed && " · closed over coffee"}
+            </span>
+            <span>{r.finding}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

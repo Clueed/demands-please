@@ -21,6 +21,7 @@ export type ScreenHandlers = {
   onNext: () => void;
   onStart: () => void;
   onNextDay: () => void;
+  onCoffee: () => void;
   onRestart: () => void;
   onPause: () => void;
 };
@@ -56,7 +57,9 @@ export function Screen({
     return () => window.removeEventListener("keydown", onKey);
   }, [paused]);
 
-  const waiting = Math.max(0, state.queue.length - (resolution ? 1 : 0));
+  // Whoever's ticket is stamped isn't waiting, even after the run ended on that stamp.
+  const decided = new Set(state.log.filter((r) => r.day === state.day).map((r) => r.demand.id));
+  const waiting = state.queue.filter((d) => !decided.has(d.id)).length;
   // Less than an hour per visitor still waiting: the line won't be through by closing time.
   const behind = waiting > 0 && DAY_END - state.clock < waiting * 60;
 
@@ -125,6 +128,7 @@ export function Screen({
           state={state}
           onStart={on.onStart}
           onNextDay={on.onNextDay}
+          onCoffee={on.onCoffee}
           onRestart={on.onRestart}
         />
       )}

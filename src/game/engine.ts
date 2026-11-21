@@ -4,8 +4,8 @@ import { DAY_END, DAY_START, LAST_DAY, FINDINGS_LIMIT } from "./time";
 import type { Decision, Demand, GameState, Resolution } from "./types";
 
 /**
- * Seeing everyone this long before closing time, with a finding on record, closes one finding.
- * It's checked as the day ends, so it can happen at most once a day.
+ * Seeing everyone this long before closing time, with a finding on record, leaves time for a
+ * coffee with the auditor, which closes one finding. At most once a day.
  */
 export const FORGIVE_MINUTES = 60;
 
@@ -47,7 +47,14 @@ export function decide(state: GameState, decision: Decision): GameState {
   if (!demand || currentResolution(state)) return state;
 
   const finding = judge(demand, decision, state.day);
-  const resolution: Resolution = { demand, decision, day: state.day, at: state.clock, finding };
+  const resolution: Resolution = {
+    demand,
+    decision,
+    day: state.day,
+    at: state.clock,
+    finding,
+    closed: false,
+  };
   const findings = state.findings + (finding ? 1 : 0);
   return {
     ...state,
@@ -76,14 +83,25 @@ export function tick(state: GameState, minutes: number): GameState {
     : endDay({ ...state, clock, queue: [] });
 }
 
-/** Everyone's seen. An hour to spare closes a finding. */
+const dayOver = (state: GameState) => (state.day === LAST_DAY ? "won" : "dayEnd");
+
+/** Everyone's seen. With an hour to spare and a finding open, the auditor has time for coffee. */
 function endDay(state: GameState): GameState {
-  const forgive = state.findings > 0 && DAY_END - state.clock >= FORGIVE_MINUTES;
+  const coffee = state.findings > 0 && DAY_END - state.clock >= FORGIVE_MINUTES;
+  return { ...state, phase: coffee ? "coffee" : dayOver(state) };
+}
+
+/** Coffee with the auditor: the latest open finding gets closed. */
+export function haveCoffee(state: GameState): GameState {
+  if (state.phase !== "coffee") return state;
+  const i = state.log.findLastIndex((r) => r.finding && !r.closed);
+  const log = state.log.map((r, j) => (j === i ? { ...r, closed: true } : r));
   return {
     ...state,
-    findings: state.findings - (forgive ? 1 : 0),
-    forgivenToday: forgive,
-    phase: state.day === LAST_DAY ? "won" : "dayEnd",
+    log,
+    findings: state.findings - 1,
+    forgivenToday: true,
+    phase: dayOver(state),
   };
 }
 
@@ -101,15 +119,21 @@ export function nextDay(state: GameState): GameState {
   };
 }
 
-export type DaySummary = { decided: number; findings: number };
+export type Summary = {
+  decided: number;
+  /** The wrong calls, oldest first. */
+  wrong: Resolution[];
+};
 
-export function summarizeDay(state: GameState): DaySummary {
-  const today = state.log.filter((r) => r.day === state.day);
-  return {
-    decided: today.length,
-    findings: today.filter((r) => r.finding).length,
-  };
-}
+const summarize = (log: Resolution[]): Summary => ({
+  decided: log.length,
+  wrong: log.filter((r) => r.finding),
+});
+
+export const summarizeDay = (state: GameState) =>
+  summarize(state.log.filter((r) => r.day === state.day));
+
+export const summarizeRun = (state: GameState) => summarize(state.log);
 
 /** Skip straight to a day's briefing with a clean record, for playtesting. */
 export function jumpToDay(state: GameState, day: number): GameState {

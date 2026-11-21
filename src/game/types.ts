@@ -79,12 +79,16 @@ export type Resolution = {
   at: number;
   /** Why the decision was wrong, or null if it was right. */
   finding: string | null;
+  /** The finding was closed over coffee with the auditor. */
+  closed: boolean;
 };
 
 export type Phase =
   /** Reading today's memo before the first visitor. */
   | "briefing"
   | "working"
+  /** Everyone's seen early, with a finding open: coffee with the auditor closes one. */
+  | "coffee"
   /** Day's over: the summary before the next briefing. */
   | "dayEnd"
   | "lost"
@@ -101,7 +105,7 @@ export type GameState = {
   /** Every decision this run. */
   log: Resolution[];
   findings: number;
-  /** Whether seeing everyone by 16:00 closed a finding today. */
+  /** Whether coffee with the auditor closed a finding today. */
   forgivenToday: boolean;
   /** New requests for every day, generated when the run starts. */
   days: Demand[][];

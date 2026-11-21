@@ -1,7 +1,7 @@
 import type { GameState } from "./types";
 
 /** Bump when `GameState` changes shape, so an old save starts a new run instead of breaking. */
-const VERSION = 1;
+const VERSION = 2;
 const KEY = "demands-pls:run";
 
 type Storage = Pick<globalThis.Storage, "getItem" | "setItem">;

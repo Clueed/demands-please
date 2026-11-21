@@ -1,7 +1,7 @@
 import { Check, ChevronRight, Paperclip, X } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { CATALOG, capabilityName } from "@/game/data";
+import { capabilityName } from "@/game/data";
 import { visibleAttachments } from "@/game/rules";
 import type { AttachmentKind, Demand, Resolution } from "@/game/types";
 import { money } from "@/lib/format";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 import { departmentColor } from "../departments";
 import { control } from "../styles";
+import { stampOf } from "./stamp";
 import { AppIcon } from "./AppIcon";
 import { FILE_NAMES } from "./attachments";
 
@@ -22,13 +23,6 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <dd className="truncate">{children}</dd>
     </>
   );
-}
-
-function stampOf(resolution: Resolution) {
-  const d = resolution.decision;
-  if (d.kind === "approve") return "Approved";
-  if (d.kind === "decline") return "Declined";
-  return `Offered ${CATALOG.find((a) => a.id === d.appId)?.name ?? ""}`;
 }
 
 /**

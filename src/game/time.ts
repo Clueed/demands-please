@@ -1,8 +1,8 @@
 /** The working day, in minutes since midnight. */
 export const DAY_START = 9 * 60;
 export const DAY_END = 17 * 60;
-/** Real time per game minute: an hour lasts 30 seconds, the whole day four minutes. */
-export const MS_PER_GAME_MINUTE = 500;
+/** Real time per game minute: an hour lasts 24 seconds, the whole day just over three minutes. */
+export const MS_PER_GAME_MINUTE = 400;
 
 export const LAST_DAY = 10;
 /** Requests per day. About an hour each, with an hour of slack in the day. */

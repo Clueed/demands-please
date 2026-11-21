@@ -3,6 +3,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import {
   currentDemand,
   decide,
+  haveCoffee,
   jumpToDay,
   newGame,
   next,
@@ -24,6 +25,7 @@ type Action =
   | { type: "next" }
   | { type: "tick"; minutes: number }
   | { type: "nextDay" }
+  | { type: "coffee" }
   | { type: "restart" };
 
 /** `round` counts restarts, so presentation state (where windows sit) can start fresh too. */
@@ -49,7 +51,7 @@ function resumeGame(): AppState {
 function step(game: GameState, action: Exclude<Action, { type: "restart" }>): GameState {
   if (action.type === "decide") return decide(game, action.decision);
   if (action.type === "tick") return tick(game, action.minutes);
-  const moves = { start: startDay, next, nextDay };
+  const moves = { start: startDay, next, nextDay, coffee: haveCoffee };
   return moves[action.type](game);
 }
 
@@ -136,6 +138,7 @@ export function App() {
             onNext={() => dispatch({ type: "next" })}
             onStart={() => dispatch({ type: "start" })}
             onNextDay={() => dispatch({ type: "nextDay" })}
+            onCoffee={() => dispatch({ type: "coffee" })}
             onRestart={() => dispatch({ type: "restart" })}
           />
         }
