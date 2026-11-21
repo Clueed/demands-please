@@ -101,7 +101,7 @@ function Stats({ state }: { state: GameState }) {
 function Forgiven({ state }: { state: GameState }) {
   return (
     state.forgivenToday && (
-      <p className="office-notice self-start">Done an hour early: one finding closed.</p>
+      <p className="office-notice self-start">Everyone seen by 16:00: one finding closed.</p>
     )
   );
 }

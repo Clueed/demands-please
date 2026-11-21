@@ -101,7 +101,7 @@ export type GameState = {
   /** Every decision this run. */
   log: Resolution[];
   findings: number;
-  /** Whether finishing an hour early closed a finding today. */
+  /** Whether seeing everyone by 16:00 closed a finding today. */
   forgivenToday: boolean;
   /** New requests for every day, generated when the run starts. */
   days: Demand[][];
