@@ -1,12 +1,11 @@
 import { useReducer, useState } from "react";
 
-import { currentDemand, currentResolution, schedule } from "@/game/engine";
+import { currentDemand, currentResolution } from "@/game/engine";
 import { isInForce, visibleAttachments } from "@/game/rules";
-import { SHADOW_IT_LIMIT, FINDINGS_LIMIT } from "@/game/time";
+import { DAY_END, FINDINGS_LIMIT } from "@/game/time";
 import type { AttachmentKind, Decision, GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
-import { Calendar } from "../screen/Calendar";
 import { DayOverlay } from "../screen/DayOverlay";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
@@ -16,19 +15,15 @@ import { ScreenWindow } from "../screen/ScreenWindow";
 import { Ticket } from "../screen/Ticket";
 import { Taskbar } from "../screen/Taskbar";
 
-/** How long, in game minutes, the "finding closed" notice stays up. */
-const NOTICE_MINUTES = 90;
-
 export type ScreenHandlers = {
   onDecide: (decision: Decision) => void;
   onNext: () => void;
-  onPush: () => void;
   onStart: () => void;
   onNextDay: () => void;
   onRestart: () => void;
 };
 
-/** The service desk workstation: calendar, ticket, rulebook and any files opened. */
+/** The service desk workstation: ticket, rulebook and any files opened. */
 export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) {
   const [screen, dispatch] = useReducer(screenReducer, undefined, initialScreen);
   const demand = currentDemand(state);
@@ -46,15 +41,12 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
     dispatch({ type: "closeAttachments" });
   }
 
-  const backlog = state.backlog.length + schedule(state).filter((a) => a.afterHours).length;
-  const forgiven = state.forgivenAt !== null && state.clock - state.forgivenAt < NOTICE_MINUTES;
+  const waiting = Math.max(0, state.queue.length - (resolution ? 1 : 0));
+  // Less than an hour per visitor still waiting: the line won't be through by closing time.
+  const behind = waiting > 0 && DAY_END - state.clock < waiting * 60;
 
   return (
     <div className="office-desktop absolute inset-0">
-      <ScreenWindow id="calendar" label="Calendar" align="end" {...win}>
-        <Calendar state={state} onPush={on.onPush} />
-      </ScreenWindow>
-
       <ScreenWindow id="rulebook" label="Rulebook" {...win}>
         <Rulebook
           day={state.day}
@@ -107,15 +99,11 @@ export function Screen({ state, ...on }: { state: GameState } & ScreenHandlers) 
           </span>
         </span>
         <span
-          className={cn(
-            "office-tray office-number",
-            backlog >= SHADOW_IT_LIMIT && "office-warning",
-          )}
-          title="Requests carried over to tomorrow"
+          className={cn("office-tray office-number", behind && "office-warning")}
+          title="Visitors still waiting. Anyone left at 17:00 ends the run."
         >
-          Backlog {backlog}/{SHADOW_IT_LIMIT}
+          Waiting {waiting}
         </span>
-        {forgiven && <span className="office-notice">An hour early: finding closed</span>}
       </Taskbar>
       {state.phase !== "working" && (
         <DayOverlay

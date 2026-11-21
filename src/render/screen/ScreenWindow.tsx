@@ -1,13 +1,4 @@
-import {
-  BookOpen,
-  CalendarDays,
-  FileBadge,
-  FileCheck,
-  FileSpreadsheet,
-  FileText,
-  Ticket,
-  X,
-} from "lucide-react";
+import { BookOpen, FileBadge, FileCheck, FileSpreadsheet, FileText, Ticket, X } from "lucide-react";
 import { useEffect, useRef, type Dispatch, type PointerEvent, type ReactNode } from "react";
 
 import { rectStyle } from "../layout";
@@ -18,7 +9,6 @@ import { clampPointer, type ScreenAction, type ScreenState, type WindowId } from
 /** How far (game pixels) the pointer must move before a press becomes a drag. */
 const DRAG_THRESHOLD = 3;
 const WINDOW_ICONS = {
-  calendar: CalendarDays,
   ticket: Ticket,
   rulebook: BookOpen,
   businessCase: FileText,
@@ -35,7 +25,6 @@ const WINDOW_ICONS = {
 export function ScreenWindow({
   id,
   label,
-  align = "start",
   onClose,
   screen,
   dispatch,
@@ -43,8 +32,6 @@ export function ScreenWindow({
 }: {
   id: WindowId;
   label: string;
-  /** "end" lays the title bar out from the right, for a window that hangs off the left edge. */
-  align?: "start" | "end";
   /** Shows a close button in the title bar. */
   onClose?: () => void;
   screen: ScreenState;
@@ -109,7 +96,7 @@ export function ScreenWindow({
     >
       <div
         data-window-handle
-        className={`office-titlebar flex shrink-0 cursor-grab touch-none items-center justify-between px-4 text-game-sm ${align === "end" ? "flex-row-reverse" : ""}`}
+        className="office-titlebar flex shrink-0 cursor-grab touch-none items-center justify-between px-4 text-game-sm"
       >
         <span className="flex items-center gap-3">
           <Icon aria-hidden="true" />

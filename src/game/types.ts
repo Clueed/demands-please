@@ -82,7 +82,7 @@ export type Resolution = {
 };
 
 export type Phase =
-  /** Reading today's memo before the first appointment. */
+  /** Reading today's memo before the first visitor. */
   | "briefing"
   | "working"
   /** Day's over: the summary before the next briefing. */
@@ -96,17 +96,13 @@ export type GameState = {
   day: number;
   /** Minutes since midnight, fractional while the clock runs. */
   clock: number;
-  /** When the appointment at the desk ends. Later appointments follow back to back. */
-  deadline: number;
-  /** Today's appointments. The first one is at the desk. */
+  /** Today's line of visitors. The first one is at the desk. */
   queue: Demand[];
-  /** Requests that didn't get handled; they come first tomorrow. */
-  backlog: Demand[];
   /** Every decision this run. */
   log: Resolution[];
   findings: number;
-  /** Game clock when finishing early closed a finding today, or null. */
-  forgivenAt: number | null;
+  /** Whether finishing an hour early closed a finding today. */
+  forgivenToday: boolean;
   /** New requests for every day, generated when the run starts. */
   days: Demand[][];
   lostTo: "audit" | "shadowIT" | null;

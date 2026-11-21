@@ -7,7 +7,6 @@ import {
   newGame,
   next,
   nextDay,
-  push,
   startDay,
   tick,
 } from "@/game/engine";
@@ -22,7 +21,6 @@ type Action =
   | { type: "start" }
   | { type: "decide"; decision: Decision }
   | { type: "next" }
-  | { type: "push" }
   | { type: "tick"; minutes: number }
   | { type: "nextDay" }
   | { type: "restart" };
@@ -41,7 +39,7 @@ const startGame = (round = 0): AppState => ({
 function step(game: GameState, action: Exclude<Action, { type: "restart" }>): GameState {
   if (action.type === "decide") return decide(game, action.decision);
   if (action.type === "tick") return tick(game, action.minutes);
-  const moves = { start: startDay, next, push, nextDay };
+  const moves = { start: startDay, next, nextDay };
   return moves[action.type](game);
 }
 
@@ -83,7 +81,6 @@ export function App() {
             state={game}
             onDecide={(decision) => dispatch({ type: "decide", decision })}
             onNext={() => dispatch({ type: "next" })}
-            onPush={() => dispatch({ type: "push" })}
             onStart={() => dispatch({ type: "start" })}
             onNextDay={() => dispatch({ type: "nextDay" })}
             onRestart={() => dispatch({ type: "restart" })}

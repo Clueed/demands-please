@@ -16,7 +16,7 @@ export const ENDINGS: Record<"audit" | "shadowIT" | "won", Ending> = {
     title: "Shadow IT",
     from: "Memo from the CFO",
     text: (state) =>
-      `${state.backlog.length} requests were still waiting at closing time, so the business ` +
+      `${state.queue.length} request${state.queue.length === 1 ? " was" : "s were"} still waiting at closing time, so the business ` +
       `stopped waiting. Departments bought their own tools on company credit cards, and ` +
       `nobody knows what runs where.`,
   },

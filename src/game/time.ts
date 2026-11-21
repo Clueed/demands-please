@@ -1,20 +1,14 @@
 /** The working day, in minutes since midnight. */
 export const DAY_START = 9 * 60;
 export const DAY_END = 17 * 60;
-/** Each appointment gets an hour; the day has room for eight. */
-export const SLOT_MINUTES = 60;
-/** How much later "push" moves every appointment still to come. */
-export const PUSH_MINUTES = 30;
-/** Real time per game minute: an hour's appointment lasts 30 seconds. */
+/** Real time per game minute: an hour lasts 30 seconds, the whole day four minutes. */
 export const MS_PER_GAME_MINUTE = 500;
 
 export const LAST_DAY = 10;
-/** New requests per day. One slot less than the day holds, so there is a little slack. */
+/** Requests per day. About an hour each, with an hour of slack in the day. */
 export const DEMANDS_PER_DAY = 7;
 /** Audit findings that end the run: the steering committee takes over approvals. */
 export const FINDINGS_LIMIT = 3;
-/** Backlog at closing time that ends the run: departments buy their own tools. */
-export const SHADOW_IT_LIMIT = 3;
 
 /** Day 1 is Monday 2 November 2026; weekends are skipped. */
 const FIRST_DAY = Date.UTC(2026, 10, 2);

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { summarizeDay } from "@/game/engine";
 import { RULES } from "@/game/rules";
-import { dayDate, FINDINGS_LIMIT, formatDay, LAST_DAY, SHADOW_IT_LIMIT } from "@/game/time";
+import { dayDate, FINDINGS_LIMIT, formatDay, LAST_DAY } from "@/game/time";
 import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ import { control } from "../styles";
 import { ENDINGS } from "./endings";
 
 /**
- * Between appointments: the morning memo, the evening summary, and the end of the run.
+ * Between visitors: the morning memo, the evening summary, and the end of the run.
  * Shown on the monitor above every window.
  */
 export function DayOverlay({
@@ -44,12 +44,12 @@ export function DayOverlay({
         )}
         {state.day === 1 && (
           <p className="office-muted">
-            Approve or decline each request, then press Next. Every visitor gets an hour. Out of
-            time? Push the calendar, but whoever doesn't fit before 17:00 ends up in the backlog.
-            Wrong calls become audit findings.
+            Approve or decline each request, then press Next. The office closes at 17:00, and anyone
+            still waiting then goes off and buys their own tools. Wrong calls become audit findings;
+            see everyone by 16:00 and one finding gets closed.
           </p>
         )}
-        <p>{state.queue.length} appointments today.</p>
+        <p>{state.queue.length} visitors today. Closing time 17:00.</p>
         <button className={cn(control, "office-next self-end")} onClick={onStart}>
           Start the day <ChevronRight aria-hidden="true" />
         </button>
@@ -61,6 +61,7 @@ export function DayOverlay({
     return (
       <Sheet title={`End of day ${state.day} · ${date}`}>
         <Stats state={state} />
+        <Forgiven state={state} />
         <button className={cn(control, "office-next self-end")} onClick={onNextDay}>
           Next day <ChevronRight aria-hidden="true" />
         </button>
@@ -93,11 +94,15 @@ function Stats({ state }: { state: GameState }) {
       <dd className="office-number">
         {state.findings} / {FINDINGS_LIMIT}
       </dd>
-      <dt className="office-label">Backlog</dt>
-      <dd className="office-number">
-        {s.backlog} / {SHADOW_IT_LIMIT}
-      </dd>
     </dl>
+  );
+}
+
+function Forgiven({ state }: { state: GameState }) {
+  return (
+    state.forgivenToday && (
+      <p className="office-notice self-start">Done an hour early: one finding closed.</p>
+    )
   );
 }
 

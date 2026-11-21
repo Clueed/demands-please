@@ -8,7 +8,7 @@ import { REGIONS, type Rect } from "../layout";
  * is on top. Kept separate from `GameState` on purpose; the game rules never see it.
  * All coordinates are whole game pixels relative to the screen.
  */
-export type WindowId = "calendar" | "ticket" | "rulebook" | AttachmentKind;
+export type WindowId = "ticket" | "rulebook" | AttachmentKind;
 
 export type ScreenState = {
   windows: Record<WindowId, Rect>;
@@ -16,8 +16,6 @@ export type ScreenState = {
   order: WindowId[];
 };
 
-/** How far the calendar starts out hanging off the left edge of the screen. */
-export const CALENDAR_HANG = 24;
 /** Height of the taskbar along the bottom of the screen, in game pixels. */
 export const TASKBAR_H = 14;
 /** The desktop area above the taskbar, where windows start out. */
@@ -29,16 +27,14 @@ const doc = (i: number): Rect => ({ x: 276 + i * 6, y: 10 + i * 14, ...DOC });
 
 export const initialScreen = (): ScreenState => ({
   windows: {
-    // The calendar hangs off the left edge; its text is right-aligned so the visible part reads.
-    calendar: { x: -CALENDAR_HANG, y: 4, w: 88 + CALENDAR_HANG, h: FULL_H },
-    ticket: { x: 92, y: 4, w: 180, h: FULL_H },
-    rulebook: { x: 276, y: 4, w: REGIONS.screen.w - 280, h: FULL_H },
+    ticket: { x: 4, y: 4, w: 180, h: FULL_H },
+    rulebook: { x: 188, y: 4, w: REGIONS.screen.w - 192, h: FULL_H },
     businessCase: doc(0),
     vendorSheet: doc(1),
     certificate: doc(2),
     worksCouncil: doc(3),
   },
-  order: ["calendar", "rulebook", "ticket"],
+  order: ["rulebook", "ticket"],
 });
 
 export type ScreenAction =

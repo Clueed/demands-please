@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { REGIONS } from "../layout";
 
-import { CALENDAR_HANG, clampPointer, initialScreen, MIN_VISIBLE, screenReducer } from "./screen";
+import { clampPointer, initialScreen, MIN_VISIBLE, screenReducer } from "./screen";
 
 describe("clampPointer", () => {
   const { x, y, w, h } = REGIONS.screen;
@@ -18,11 +18,8 @@ describe("clampPointer", () => {
 });
 
 describe("screenReducer", () => {
-  it("starts with every window on the screen, the calendar hanging off the left edge", () => {
-    const { calendar, ...rest } = initialScreen().windows;
-    expect(calendar.x).toBe(-CALENDAR_HANG);
-    expect(calendar.x + calendar.w).toBeGreaterThan(MIN_VISIBLE);
-    for (const w of Object.values(rest)) {
+  it("starts with every window on the screen", () => {
+    for (const w of Object.values(initialScreen().windows)) {
       expect(w.x).toBeGreaterThanOrEqual(0);
       expect(w.y).toBeGreaterThanOrEqual(0);
       expect(w.x + w.w).toBeLessThanOrEqual(REGIONS.screen.w);
@@ -30,8 +27,8 @@ describe("screenReducer", () => {
     }
   });
 
-  it("starts with the calendar, rulebook and ticket open, attachments closed", () => {
-    expect(initialScreen().order).toEqual(["calendar", "rulebook", "ticket"]);
+  it("starts with the rulebook and ticket open, attachments closed", () => {
+    expect(initialScreen().order).toEqual(["rulebook", "ticket"]);
   });
 
   it("moves a window, letting it hang off the screen", () => {
@@ -75,7 +72,6 @@ describe("screenReducer", () => {
   it("raises a window to the top of the stack", () => {
     const screen = initialScreen();
     expect(screenReducer(screen, { type: "raise", id: "rulebook" }).order).toEqual([
-      "calendar",
       "ticket",
       "rulebook",
     ]);

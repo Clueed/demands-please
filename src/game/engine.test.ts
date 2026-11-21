@@ -9,24 +9,12 @@ import {
   newGame,
   next,
   nextDay,
-  push,
-  schedule,
   startDay,
   tick,
 } from "./engine";
 import { generateDays } from "./generate";
 import { judge, RULES, verdict } from "./rules";
-import {
-  SHADOW_IT_LIMIT,
-  dayDate,
-  DAY_END,
-  DAY_START,
-  DEMANDS_PER_DAY,
-  LAST_DAY,
-  FINDINGS_LIMIT,
-  PUSH_MINUTES,
-  SLOT_MINUTES,
-} from "./time";
+import { dayDate, DAY_END, DAY_START, DEMANDS_PER_DAY, LAST_DAY, FINDINGS_LIMIT } from "./time";
 import type { Demand, GameState } from "./types";
 
 /** A ticket that passes every rule. */
@@ -163,6 +151,12 @@ describe("generateDays", () => {
   });
 });
 
+/** Approve the visitor at the desk and call in the next. */
+const approve = (s: GameState) => next(decide(s, { kind: "approve" }));
+/** Decline a valid ticket and call in the next: a finding. */
+const wrong = (s: GameState) => next(decide(s, { kind: "decline" }));
+const DAY = DAY_END - DAY_START;
+
 describe("the day", () => {
   it("a decision is final; next calls in the following visitor", () => {
     let s = working();
@@ -178,70 +172,40 @@ describe("the day", () => {
     expect(next(s)).toBe(s);
   });
 
-  it("an undecided visitor whose time runs out goes to the backlog", () => {
-    const s = tick(working(), SLOT_MINUTES);
-    expect(s.backlog.map((d) => d.id)).toEqual(["d0"]);
-    expect(currentDemand(s)?.id).toBe("d1");
+  it("a visitor stays at the desk however long it takes", () => {
+    const s = tick(working(), DAY - 1);
+    expect(s).toMatchObject({ phase: "working", clock: DAY_END - 1 });
+    expect(currentDemand(s)?.id).toBe("d0");
   });
 
-  it("a decided visitor whose time runs out just leaves", () => {
-    const s = tick(decide(working(), { kind: "approve" }), SLOT_MINUTES);
-    expect(s.backlog).toEqual([]);
-    expect(currentDemand(s)?.id).toBe("d1");
+  it("ends once everyone is seen", () => {
+    expect(approve(working(1)).phase).toBe("dayEnd");
   });
 
-  it("time saved carries over to the next appointment", () => {
-    let s = tick(working(), 20);
-    s = next(decide(s, { kind: "approve" }));
-    expect(s.deadline).toBe(DAY_START + 2 * SLOT_MINUTES);
+  it("anyone still waiting at closing time loses the run to shadow IT", () => {
+    const s = tick(approve(working(3)), DAY);
+    expect(s).toMatchObject({ phase: "lost", lostTo: "shadowIT" });
+    expect(s.queue.map((d) => d.id)).toEqual(["d1", "d2"]);
   });
 
-  it("push gives more time and moves everyone after", () => {
-    const s = push(working());
-    expect(s.deadline).toBe(DAY_START + SLOT_MINUTES + PUSH_MINUTES);
-    expect(schedule(s)[1]?.start).toBe(DAY_START + SLOT_MINUTES + PUSH_MINUTES);
-  });
-
-  it("appointments pushed past closing time are marked after hours", () => {
-    let s = working(8);
-    s = push(push(s));
-    expect(schedule(s).filter((a) => a.afterHours)).toHaveLength(1);
-  });
-
-  it("ends early once everyone is seen", () => {
-    let s = working(1);
-    s = next(decide(s, { kind: "approve" }));
+  it("a decided visitor still at the desk at closing time doesn't count", () => {
+    const s = tick(decide(approve(working(2)), { kind: "approve" }), DAY);
     expect(s.phase).toBe("dayEnd");
   });
 
-  it("at closing time everyone left waiting goes to the backlog", () => {
-    const s = tick(working(10), DAY_END - DAY_START);
-    expect(s.phase).toBe("lost");
-    expect(s.lostTo).toBe("shadowIT");
-    expect(s.backlog.length).toBeGreaterThanOrEqual(SHADOW_IT_LIMIT);
-  });
-
-  it("the backlog comes first the next morning", () => {
-    let s = tick(working(), SLOT_MINUTES);
-    s = next(decide(s, { kind: "approve" }));
-    s = next(decide(s, { kind: "approve" }));
-    expect(s.phase).toBe("dayEnd");
+  it("the next morning brings a fresh line", () => {
+    let s = approve(approve(approve(working())));
     s = nextDay(s);
-    expect(s).toMatchObject({ phase: "briefing", day: 2, clock: DAY_START, backlog: [] });
-    expect(s.queue.map((d) => d.id)).toEqual(["d0", "d0", "d1", "d2"]);
+    expect(s).toMatchObject({ phase: "briefing", day: 2, clock: DAY_START });
+    expect(s.queue.map((d) => d.id)).toEqual(["d0", "d1", "d2"]);
   });
 
   it("surviving the last day wins", () => {
     let s = working(1);
-    for (let day = 1; day < LAST_DAY; day++)
-      s = startDay(nextDay(next(decide(s, { kind: "approve" }))));
-    s = next(decide(s, { kind: "approve" }));
-    expect(s.phase).toBe("won");
+    for (let day = 1; day < LAST_DAY; day++) s = startDay(nextDay(approve(s)));
+    expect(approve(s).phase).toBe("won");
   });
 });
-
-/** Decline a valid ticket, then let the visitor's time run out. */
-const wrong = (s: GameState) => tick(decide(s, { kind: "decline" }), SLOT_MINUTES);
 
 describe("findings", () => {
   it("the last finding allowed ends the run with an audit", () => {
@@ -253,30 +217,22 @@ describe("findings", () => {
     expect(s).toMatchObject({ phase: "lost", lostTo: "audit", findings: FINDINGS_LIMIT });
   });
 
-  it("finishing an hour early closes an earlier finding, and spends the hour", () => {
-    let s = next(decide(working(4), { kind: "decline" }));
-    // Wrong at 09:00 and sent off at once, but a finding never cancels itself.
-    expect(s.findings).toBe(1);
-    s = tick(s, 30);
-    // 09:30, and this appointment runs until 11:00: 90 minutes early.
-    s = next(decide(s, { kind: "approve" }));
-    expect(s.findings).toBe(0);
-    expect(s.forgivenAt).toBe(DAY_START + 30);
-    expect(s.deadline).toBe(DAY_START + 3 * SLOT_MINUTES - FORGIVE_MINUTES);
+  it("seeing everyone an hour before closing closes one finding", () => {
+    let s = wrong(wrong(tick(working(3), DAY - FORGIVE_MINUTES)));
+    expect(s.findings).toBe(2);
+    s = approve(s);
+    expect(s).toMatchObject({ phase: "dayEnd", findings: 1, forgivenToday: true });
+    expect(nextDay(s).forgivenToday).toBe(false);
   });
 
-  it("closes at most one finding a day", () => {
-    let s = working(6);
-    // Blind and instant: every ticket declined at 09:00 and sent off at once.
-    for (let i = 0; i < FINDINGS_LIMIT + 1; i++) s = next(decide(s, { kind: "decline" }));
-    expect(s).toMatchObject({ findings: FINDINGS_LIMIT, phase: "lost", lostTo: "audit" });
+  it("less than an hour to spare closes nothing", () => {
+    const s = approve(wrong(tick(working(2), DAY - FORGIVE_MINUTES + 1)));
+    expect(s).toMatchObject({ phase: "dayEnd", findings: 1, forgivenToday: false });
   });
 
-  it("with no findings, time saved is kept", () => {
-    let s = working(4);
-    s = next(decide(s, { kind: "approve" }));
-    s = next(decide(s, { kind: "approve" }));
-    expect(s.deadline - s.clock).toBe(3 * SLOT_MINUTES);
+  it("with no findings, finishing early closes nothing", () => {
+    const s = approve(working(1));
+    expect(s).toMatchObject({ findings: 0, forgivenToday: false });
   });
 });
 
