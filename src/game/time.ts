@@ -35,10 +35,10 @@ export function formatDate(iso: string): string {
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
-/** "Fri 13 Nov". */
+/** "Fri 13 Nov 2026". The year matters: certificates are checked against today. */
 export function formatDay(iso: string): string {
   const d = new Date(iso);
-  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+  return `${WEEKDAYS[d.getUTCDay()]} ${formatDate(iso)}`;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");

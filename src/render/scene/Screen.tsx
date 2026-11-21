@@ -2,11 +2,11 @@ import { useEffect, useReducer, useState } from "react";
 
 import { currentDemand, currentResolution } from "@/game/engine";
 import { isInForce, visibleAttachments } from "@/game/rules";
-import { DAY_END, FINDINGS_LIMIT } from "@/game/time";
+import { DAY_END, dayDate, FINDINGS_LIMIT, formatDay } from "@/game/time";
 import type { AttachmentKind, Decision, GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
-import { DayOverlay } from "../screen/DayOverlay";
+import { ConfirmRestart, DayOverlay } from "../screen/DayOverlay";
 import { LockScreen } from "../screen/LockScreen";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
@@ -48,14 +48,18 @@ export function Screen({
     dispatch({ type: "closeAttachments" });
   }
 
-  // Escape puts away the file on top, like closing its window.
+  const [confirmingRestart, setConfirmingRestart] = useState(false);
+
+  // Escape backs out of a restart, or puts away the file on top, like closing its window.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !paused) dispatch({ type: "closeTopAttachment" });
+      if (e.key !== "Escape" || paused) return;
+      if (confirmingRestart) setConfirmingRestart(false);
+      else dispatch({ type: "closeTopAttachment" });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [paused]);
+  }, [paused, confirmingRestart]);
 
   // Whoever's ticket is stamped isn't waiting, even after the run ended on that stamp.
   const decided = new Set(state.log.filter((r) => r.day === state.day).map((r) => r.demand.id));
@@ -108,7 +112,12 @@ export function Screen({
             </ScreenWindow>
           ))}
 
-      <Taskbar minutes={state.clock} onRestart={on.onRestart} onPause={on.onPause}>
+      <Taskbar
+        minutes={state.clock}
+        date={formatDay(dayDate(state.day))}
+        onRestart={() => setConfirmingRestart(true)}
+        onPause={on.onPause}
+      >
         <span className="office-tray" title="Open audit findings">
           Findings
           <span className="office-pips" aria-label={`${state.findings} of ${FINDINGS_LIMIT}`}>
@@ -131,6 +140,15 @@ export function Screen({
           onNextDay={on.onNextDay}
           onCoffee={on.onCoffee}
           onRestart={on.onRestart}
+        />
+      )}
+      {confirmingRestart && (
+        <ConfirmRestart
+          onConfirm={() => {
+            setConfirmingRestart(false);
+            on.onRestart();
+          }}
+          onCancel={() => setConfirmingRestart(false)}
         />
       )}
       {paused && <LockScreen minutes={state.clock} onWake={on.onPause} />}

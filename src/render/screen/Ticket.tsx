@@ -101,7 +101,7 @@ export function Ticket({
         <section>
           <div className="office-label mb-1">Attachments ({files.length})</div>
           {files.length === 0 ? (
-            <p className="office-empty">No files attached.</p>
+            <p className="office-muted italic">No files attached.</p>
           ) : (
             <ul className="flex flex-col gap-1">
               {files.map((f) => (

@@ -119,6 +119,7 @@ export function Rulebook({
                       <p className="office-desc">{app.description}</p>
                       <button
                         className="office-offer"
+                        aria-label={`Offer ${app.name} instead`}
                         disabled={!canOffer}
                         onClick={() => onOffer(app.id)}
                       >

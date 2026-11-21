@@ -47,9 +47,11 @@ export function DayOverlay({
         )}
         {state.day === 1 && (
           <p className="office-muted">
-            Approve or decline each request, then press Next. The office closes at 17:00, and anyone
-            still waiting then goes off and buys their own tools. Wrong calls become audit findings;
-            see everyone by 16:00 and one finding gets closed.
+            Approve or decline each request, then press Next. Open the attached files to check them.
+            The clock starts when you start the day and keeps running while you read. The office
+            closes at 17:00, and anyone still waiting then goes off and buys their own tools. Wrong
+            calls become audit findings; see everyone by 16:00 and the auditor may have time for a
+            coffee.
           </p>
         )}
         <p>{state.queue.length} visitors today. Closing time 17:00.</p>
@@ -161,6 +163,31 @@ function WrongCalls({ wrong, withDay = false }: { wrong: Resolution[]; withDay?:
         ))}
       </ol>
     </section>
+  );
+}
+
+/** "Are you sure?" before throwing away the run, which is the only one. */
+export function ConfirmRestart({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Sheet title="Restart game">
+      <p>Start a new run from day 1? This run's progress and findings are gone for good.</p>
+      <div className="flex gap-2 self-end">
+        <button className={cn(control, "office-next")} onClick={onCancel} autoFocus>
+          Keep playing
+        </button>
+        <button className={cn(control, "office-decline")} onClick={onConfirm}>
+          <span>
+            <RotateCcw aria-hidden="true" /> Restart
+          </span>
+        </button>
+      </div>
+    </Sheet>
   );
 }
 

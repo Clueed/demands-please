@@ -13,11 +13,14 @@ const ORB_SHINE = "M2 2h2v1H3v1H2Z";
  */
 export function Taskbar({
   minutes,
+  date,
   onRestart,
   onPause,
   children,
 }: {
   minutes: number;
+  /** Today's date, e.g. "Mon 2 Nov 2026". */
+  date: string;
   onRestart: () => void;
   /** Switches the monitor off, same as its power light. */
   onPause: () => void;
@@ -77,7 +80,10 @@ export function Taskbar({
       )}
       {children}
       <span className="flex-1" />
-      <time className="office-tray office-clock office-number">{clock(minutes)}</time>
+      <span className="office-tray office-clock office-number">
+        <span>{date}</span>
+        <time>{clock(minutes)}</time>
+      </span>
     </footer>
   );
 }
