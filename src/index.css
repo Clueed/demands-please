@@ -905,3 +905,13 @@
   padding-right: calc(var(--gp) * 2);
   font-weight: 600;
 }
+
+/* App icon tiles: one art pixel per game pixel, kept crisp. */
+.office-app-icon {
+  display: inline-block;
+  width: calc(var(--gp) * 14);
+  height: calc(var(--gp) * 14);
+  flex-shrink: 0;
+  vertical-align: middle;
+  image-rendering: pixelated;
+}

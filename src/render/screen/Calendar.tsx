@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { gamePx } from "../layout";
 import { control } from "../styles";
+import { AppIcon } from "./AppIcon";
 import { timeline, TIMELINE_H } from "./calendar";
 
 /**
@@ -34,7 +35,10 @@ export function Calendar({ state, onPush }: { state: GameState; onPush: () => vo
             className={cn("office-appointment", b.atDesk && "is-now")}
             style={{ top: gamePx(b.y), height: gamePx(b.h) }}
           >
-            <b className="truncate">{b.demand.app}</b>
+            <span className="flex min-w-0 items-center gap-2">
+              <AppIcon name={b.demand.app} />
+              <b className="truncate">{b.demand.app}</b>
+            </span>
             {b.h >= 18 && (
               <span className="office-muted truncate">
                 {b.atDesk ? "At desk" : b.time} · {b.demand.requester.name.split(" ").at(-1)}

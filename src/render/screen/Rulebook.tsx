@@ -13,6 +13,7 @@ import { rulesInForce } from "@/game/rules";
 import { cn } from "@/lib/utils";
 
 import { departmentColor } from "../departments";
+import { AppIcon } from "./AppIcon";
 
 /** Rulebook tabs and the day each one is first needed. */
 const TABS = [
@@ -113,7 +114,10 @@ export function Rulebook({
               <ul>
                 {CATALOG.filter((a) => a.capabilityId === c.id).map((app) => (
                   <li key={app.id} className="office-app-card">
-                    <b>{app.name}</b>
+                    <b className="flex items-center gap-2">
+                      <AppIcon name={app.name} />
+                      {app.name}
+                    </b>
                     <p className="office-desc">{app.description}</p>
                     <button
                       className="office-offer"

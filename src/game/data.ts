@@ -1,4 +1,4 @@
-import type { Capability, CatalogApp } from "./types";
+import type { Capability, CatalogApp } from "./types.ts";
 
 export const CAPABILITIES: Capability[] = [
   { id: "sales-marketing", name: "Sales & Marketing" },

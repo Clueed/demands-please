@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 import { departmentColor } from "../departments";
 import { control } from "../styles";
+import { AppIcon } from "./AppIcon";
 import { FILE_NAMES } from "./attachments";
 
 /** Ticket fields that only show once a rule needs them. */
@@ -85,7 +86,10 @@ export function Ticket({
             {demand.sponsor ?? <span className="office-empty">none</span>}
           </Field>
           <Field label="App">
-            <b>{demand.app}</b>
+            <span className="flex items-center gap-2">
+              <AppIcon name={demand.app} />
+              <b>{demand.app}</b>
+            </span>
           </Field>
           <Field label="Vendor">{demand.vendor}</Field>
           <Field label="Cost/yr">

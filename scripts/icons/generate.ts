@@ -6,6 +6,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { slug } from "../../src/lib/slug.ts";
+import { APPS, appIcon } from "./apps.ts";
 import { ART, BACKGROUND, PALETTE, opaque, padded } from "./art.ts";
 import { encodeIco, encodePng, encodeSvg, rasterize } from "./encode.ts";
 
@@ -44,6 +46,14 @@ const files: Record<string, string | Buffer> = {
 };
 
 await mkdir(out, { recursive: true });
+const appDir = join(import.meta.dirname, "../../src/render/screen/app-icons");
+await mkdir(appDir, { recursive: true });
+for (const [name, brand] of APPS) {
+  const { art, palette } = appIcon(name, brand);
+  await writeFile(join(appDir, `${slug(name)}.svg`), encodeSvg(art, palette));
+}
+console.log(`src/render/screen/app-icons/ (${APPS.length} apps)`);
+
 for (const [name, contents] of Object.entries(files)) {
   await writeFile(join(out, name), contents);
   console.log(`public/${name}`);
