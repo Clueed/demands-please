@@ -1,4 +1,13 @@
-import { CalendarDays, Files, FileText, PieChart } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  FileBadge,
+  FileCheck,
+  FileSpreadsheet,
+  FileText,
+  Ticket,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, type Dispatch, type PointerEvent, type ReactNode } from "react";
 
 import { rectStyle } from "../layout";
@@ -8,7 +17,15 @@ import { clampPointer, type ScreenAction, type ScreenState, type WindowId } from
 
 /** How far (game pixels) the pointer must move before a press becomes a drag. */
 const DRAG_THRESHOLD = 3;
-const WINDOW_ICONS = { calendar: CalendarDays, binder: Files, form: FileText, gauges: PieChart };
+const WINDOW_ICONS = {
+  calendar: CalendarDays,
+  ticket: Ticket,
+  rulebook: BookOpen,
+  businessCase: FileText,
+  vendorSheet: FileSpreadsheet,
+  certificate: FileBadge,
+  worksCouncil: FileCheck,
+};
 
 /**
  * A window on the monitor: press to bring to the front, drag to move.
@@ -19,6 +36,7 @@ export function ScreenWindow({
   id,
   label,
   align = "start",
+  onClose,
   screen,
   dispatch,
   children,
@@ -27,6 +45,8 @@ export function ScreenWindow({
   label: string;
   /** "end" lays the title bar out from the right, for a window that hangs off the left edge. */
   align?: "start" | "end";
+  /** Shows a close button in the title bar. */
+  onClose?: () => void;
   screen: ScreenState;
   dispatch: Dispatch<ScreenAction>;
   children?: ReactNode;
@@ -96,6 +116,11 @@ export function ScreenWindow({
           {label}
         </span>
         <span className="office-titlebar-ridges" aria-hidden="true" />
+        {onClose && (
+          <button className="office-close" onClick={onClose} aria-label={`Close ${label}`}>
+            <X aria-hidden="true" />
+          </button>
+        )}
       </div>
       {children}
     </section>

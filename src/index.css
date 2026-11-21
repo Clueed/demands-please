@@ -417,33 +417,76 @@
 }
 
 /* The calendar hangs off the left edge, so its rows read from the right. */
+.office-hour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: var(--gp) solid var(--rule);
+  font-size: calc(var(--gp) * 5);
+  line-height: calc(var(--gp) * 6);
+  color: #7d8a80;
+  text-align: right;
+  padding-right: var(--gp);
+}
+/* Time already gone today, shaded like a page that's been read. */
+.office-past {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: #0000000f;
+}
 .office-appointment {
-  flex: 1;
+  position: absolute;
+  left: 0;
+  right: calc(var(--gp) * 20);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
   text-align: right;
-  padding: calc(var(--gp) * 3) calc(var(--gp) * 4);
-  border-bottom: var(--gp) solid var(--rule);
-  border-left: calc(var(--gp) * 2) solid transparent;
-}
-.office-appointment time {
-  color: var(--ink-soft);
+  padding: 0 calc(var(--gp) * 2);
+  background: var(--paper-hi);
+  border: var(--gp) solid #a9b39f;
+  border-right: calc(var(--gp) * 2) solid #8e9f96;
 }
 .office-appointment.is-now {
   background: #bccfb3;
-  border-left-color: var(--green);
+  border-color: var(--green-dk);
+  border-right-color: var(--green);
 }
-.office-appointment.is-now .office-label {
-  color: #f3f0da;
-  background: var(--green);
-  padding: 0 calc(var(--gp) * 2);
+/* "Now": a red line sliding down the day, the only thing that moves on its own. */
+.office-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--gp);
+  margin-top: calc(var(--gp) * -0.5);
+  background: var(--red);
+  box-shadow: 0 var(--gp) 0 #7a4a3e55;
+  z-index: 2;
 }
-.office-appointment.is-done {
-  color: #6f7d73;
+.office-now::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: calc(var(--gp) * -2);
+  width: calc(var(--gp) * 5);
+  height: calc(var(--gp) * 5);
+  background: var(--red);
+}
+.office-closing {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: calc(var(--gp) * 2) dashed var(--red-dk);
+}
+.office-warning {
+  color: #8a3e2e;
+  font-weight: 600;
 }
 
-/* Filters are tabs attached to the list below them. */
+/* Tabs attached to the page below them. */
 .office-categories {
   display: flex;
   flex-wrap: wrap;
@@ -465,30 +508,78 @@
 .office-category:hover {
   background: #d3d6c3;
 }
-.office-category[aria-pressed="true"] {
-  background: var(--paper);
-  color: var(--ink);
+.office-category.is-new {
+  box-shadow: inset 0 calc(var(--gp) * 2) 0 var(--ochre);
+}
+.office-category[aria-selected="true"] {
   font-weight: 600;
   color: var(--green-dk);
   background: var(--paper-hi);
   border-bottom-color: var(--paper-hi);
   box-shadow: inset 0 calc(var(--gp) * 2) 0 var(--green);
 }
-.office-app-card {
-  margin-top: calc(var(--gp) * 5);
-  padding: calc(var(--gp) * 5) calc(var(--gp) * 5);
-  font-size: calc(var(--gp) * 8);
-  line-height: calc(var(--gp) * 10);
+.office-rulebook {
+  background: var(--paper-hi);
+}
+.office-rule {
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
   background: var(--paper);
   border: var(--gp) solid #c4c8b4;
 }
-.office-app-card .office-number {
-  font-size: calc(var(--gp) * 7);
+.office-rule p {
+  margin-top: var(--gp);
+}
+.office-rule.is-new {
+  background: #e9dfb8;
+  border-color: #b8a670;
+}
+.office-rule-number {
+  display: inline-grid;
+  place-items: center;
+  min-width: calc(var(--gp) * 9);
+  height: calc(var(--gp) * 9);
+  background: var(--frame);
+  color: #f2efd8;
+  font-size: calc(var(--gp) * 6);
+}
+.office-new {
+  padding: 0 calc(var(--gp) * 2);
+  background: var(--ochre);
+  color: #5b4c2a;
+  font-family: var(--pixel-caps);
+  font-size: calc(var(--gp) * 5);
+  text-transform: uppercase;
+}
+.office-card {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gp) * 3);
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
+  background: var(--paper);
+  border: var(--gp) solid #c4c8b4;
+}
+.office-swatch {
+  width: calc(var(--gp) * 4);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.office-radar li {
+  padding: var(--gp) calc(var(--gp) * 3);
+  border-left: calc(var(--gp) * 2) solid var(--green);
+  margin-bottom: var(--gp);
+  background: var(--paper);
+}
+.office-radar.is-hold li {
+  border-left-color: var(--red);
+}
+.office-app-card {
+  margin-top: calc(var(--gp) * 2);
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
+  background: var(--paper);
+  border: var(--gp) solid #c4c8b4;
 }
 .office-desc {
-  margin-top: calc(var(--gp) * 2);
-  font-size: calc(var(--gp) * 7);
-  line-height: calc(var(--gp) * 9);
+  margin-top: var(--gp);
   color: var(--ink);
 }
 /* Offering is the secondary move: a quiet link until hovered. */
@@ -498,12 +589,11 @@
   gap: var(--gp);
   padding: 0 calc(var(--gp) * 2);
   margin-left: calc(var(--gp) * -2);
-  margin-top: calc(var(--gp) * 2);
+  margin-top: var(--gp);
   color: #2f5a48;
   text-decoration: underline;
   text-decoration-thickness: var(--gp);
   text-underline-offset: calc(var(--gp) * 2);
-  font-size: calc(var(--gp) * 7);
   cursor: pointer;
 }
 .office-offer:hover:enabled {
@@ -511,86 +601,188 @@
   text-decoration: none;
   outline: var(--gp) solid var(--frame);
 }
+.office-offer:disabled {
+  color: #7d8a80;
+  text-decoration: none;
+  cursor: default;
+}
 .office-offer svg {
   width: calc(var(--gp) * 6);
   height: calc(var(--gp) * 6);
 }
 
-.office-metrics strong {
-  font-size: calc(var(--gp) * 10);
-  line-height: calc(var(--gp) * 12);
-}
-/* The score as ten chunky blocks, like a battery indicator. */
-.office-meter {
-  display: flex;
-  gap: var(--gp);
-  margin-top: var(--gp);
-}
-.office-meter span {
-  flex: 1;
-  height: calc(var(--gp) * 5);
-  background: var(--paper-hi);
-  box-shadow: inset 0 0 0 var(--gp) #9aa697;
-}
-.office-meter span[data-on="true"] {
-  background: #4f6f5a;
-  box-shadow: inset 0 calc(var(--gp) * -1) 0 var(--green-dk);
-}
-
-.office-form {
+/* The ticket: a service desk record. */
+.office-ticket {
   background: var(--paper-hi);
 }
 .office-requester {
   display: flex;
   align-items: center;
   gap: calc(var(--gp) * 3);
-  padding-bottom: calc(var(--gp) * 3);
+  padding-bottom: calc(var(--gp) * 2);
   border-bottom: calc(var(--gp) * 2) solid var(--rule);
 }
 .office-avatar {
   display: grid;
   place-items: center;
-  width: calc(var(--gp) * 15);
-  height: calc(var(--gp) * 15);
+  width: calc(var(--gp) * 13);
+  height: calc(var(--gp) * 13);
   flex-shrink: 0;
   color: #f3f0da;
   border: var(--gp) solid #233a33;
-  font-size: calc(var(--gp) * 9);
+  font-size: calc(var(--gp) * 8);
 }
-.office-request-name {
-  margin-top: var(--gp);
-  font-size: calc(var(--gp) * 17);
-  line-height: calc(var(--gp) * 19);
-  color: #1f332d;
+.office-fields {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--gp) calc(var(--gp) * 4);
+  align-items: baseline;
 }
-.office-cost {
-  padding: calc(var(--gp) * 2) 0;
-  border-top: calc(var(--gp) * 2) solid var(--rule);
-  border-bottom: calc(var(--gp) * 2) solid var(--rule);
+.office-fields .office-label {
+  font-size: calc(var(--gp) * 5);
 }
-.office-cost b {
-  font-size: calc(var(--gp) * 9);
+.office-empty {
+  color: #8a3e2e;
+  font-style: italic;
 }
 .office-justification {
   background: var(--paper);
   border-left: calc(var(--gp) * 2) solid var(--ochre);
-  padding: calc(var(--gp) * 4) calc(var(--gp) * 5);
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
   color: var(--ink);
-  font-size: calc(var(--gp) * 10);
-  line-height: calc(var(--gp) * 13);
 }
-/* A rubber stamp, slightly crooked. */
-.office-pending {
+.office-file {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gp) * 2);
+  width: 100%;
+  padding: var(--gp) calc(var(--gp) * 2);
+  background: var(--paper);
+  border: var(--gp) solid #a9b39f;
+  color: #2f5a48;
+  text-align: left;
+  cursor: pointer;
+}
+.office-file:hover {
+  background: #eeeddf;
+  border-color: var(--frame);
+}
+.office-file[data-open="true"] {
+  background: #bccfb3;
+  border-color: var(--green-dk);
+}
+.office-file svg {
+  width: calc(var(--gp) * 6);
+  height: calc(var(--gp) * 6);
+  flex-shrink: 0;
+}
+.office-status {
   color: #7a6230;
-  border: calc(var(--gp) * 2) solid #9a7f3e;
+  border: var(--gp) solid #9a7f3e;
   padding: 0 calc(var(--gp) * 2);
+  font-family: var(--pixel-caps);
   text-transform: uppercase;
-  letter-spacing: calc(var(--gp) * 0.4);
-  font-size: calc(var(--gp) * 6);
+  font-size: calc(var(--gp) * 5);
+}
+.office-status.is-closed {
+  color: var(--green-dk);
+  border-color: var(--green);
+}
+/* The decision, stamped on the ticket. */
+.office-stamp {
+  padding: var(--gp) calc(var(--gp) * 2);
+  border: calc(var(--gp) * 2) solid var(--green);
+  color: var(--green-dk);
+  font-family: var(--pixel-caps);
+  text-transform: uppercase;
+  text-align: center;
+  transform: rotate(-2deg);
+}
+.office-stamp.is-wrong {
+  border-color: var(--red);
+  color: var(--red-dk);
+}
+.office-next {
+  background: var(--frame);
+  color: #f2efd8;
+  border-color: #1f342c;
+  box-shadow:
+    inset calc(var(--gp) * -1) calc(var(--gp) * -2) 0 #233a33,
+    inset var(--gp) var(--gp) 0 #5f7a72;
+}
+.office-next:hover:enabled {
+  background: #4a6a5d;
+}
+.office-citation {
+  margin-top: calc(var(--gp) * 2);
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
+  background: #e9c8bb;
+  border: var(--gp) solid var(--red);
+  color: #5c2a20;
 }
 .office-actions {
   background: var(--paper-lo);
   border-top: var(--gp) solid var(--rule);
+}
+
+/* Attachments, printed on paper. */
+.office-doc {
+  position: relative;
+  min-height: 100%;
+  padding: calc(var(--gp) * 4);
+  background: #f1ecd9;
+}
+.office-doc-head {
+  margin-bottom: var(--gp);
+  font-size: calc(var(--gp) * 9);
+  line-height: calc(var(--gp) * 11);
+  font-weight: 600;
+  color: #1f332d;
+}
+.office-doc .office-fields {
+  row-gap: calc(var(--gp) * 2);
+}
+.office-certificate {
+  text-align: center;
+  border: calc(var(--gp) * 2) double #b8a670;
+}
+.office-seal {
+  display: block;
+  width: calc(var(--gp) * 14);
+  height: calc(var(--gp) * 14);
+  margin: calc(var(--gp) * 3) auto 0;
+  background: var(--ochre);
+  border: calc(var(--gp) * 2) solid #a8975f;
+  border-radius: 50%;
+}
+.office-doc-stamp {
+  display: inline-block;
+  margin-top: calc(var(--gp) * 4);
+  padding: var(--gp) calc(var(--gp) * 3);
+  border: calc(var(--gp) * 2) solid var(--green);
+  color: var(--green-dk);
+  font-family: var(--pixel-caps);
+  font-size: calc(var(--gp) * 8);
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+}
+.office-doc-stamp.is-wrong {
+  border-color: var(--red);
+  color: var(--red-dk);
+}
+
+/* Morning memo and evening summary, over a dimmed desktop. */
+.office-overlay {
+  background: #20332f99;
+}
+.office-sheet {
+  width: calc(var(--gp) * 240);
+}
+.office-sheet .office-titlebar {
+  background: #3f6555;
+  color: #f2efd8;
+  border-bottom-color: #233a33;
+  cursor: default;
 }
 
 .office-taskbar {
@@ -633,7 +825,40 @@
   height: calc(var(--gp) * 6);
 }
 
-/* What approving would do to the budget, in the accent colour. */
-.office-projection {
-  color: #7a6230;
+.office-tray {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--gp) * 2);
+  padding: 0 calc(var(--gp) * 3);
+  border-left: var(--gp) solid #93a08d;
+  line-height: calc(var(--gp) * 9);
+}
+.office-pips {
+  display: inline-flex;
+  gap: var(--gp);
+}
+.office-pips span {
+  width: calc(var(--gp) * 5);
+  height: calc(var(--gp) * 5);
+  background: var(--paper-hi);
+  box-shadow: inset 0 0 0 var(--gp) #9aa697;
+}
+.office-pips span[data-on="true"] {
+  background: var(--red);
+  box-shadow: inset 0 calc(var(--gp) * -1) 0 var(--red-dk);
+}
+.office-notice {
+  padding: 0 calc(var(--gp) * 2);
+  background: var(--ochre);
+  color: #5b4c2a;
+  line-height: calc(var(--gp) * 9);
+}
+.office-close {
+  display: grid;
+  place-items: center;
+  margin-right: calc(var(--gp) * -1);
+  cursor: pointer;
+}
+.office-close:hover {
+  color: #f3c4b6;
 }

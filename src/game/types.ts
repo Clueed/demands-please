@@ -1,56 +1,111 @@
-/** A business area, e.g. Sales & Marketing or Manufacturing. One catalog page per capability. */
+/** A business area, e.g. Sales & Marketing or Manufacturing. Also the requester's department. */
 export type Capability = {
   id: string;
   name: string;
 };
 
-/** An application already in the portfolio. Already paid for, so offering it costs nothing. */
+/** An application already in the portfolio. */
 export type CatalogApp = {
   id: string;
   name: string;
   capabilityId: string;
   description: string;
-  tags: string[];
-  /** What the company already pays for this app per year. */
-  spend: number;
 };
 
-/** A request handed over the desk: "please buy us X, because Y". */
+/** A document attached to a ticket. Each kind only shows up from the day a rule needs it. */
+export type Attachment =
+  | {
+      kind: "businessCase";
+      app: string;
+      benefit: string;
+    }
+  | {
+      kind: "vendorSheet";
+      vendor: string;
+      product: string;
+      /** Price per year, as quoted by the vendor. */
+      price: number;
+      sso: boolean;
+    }
+  | {
+      kind: "certificate";
+      vendor: string;
+      standard: "ISO/IEC 27001" | "SOC 2 Type II";
+      /** ISO date, e.g. "2027-03-31". */
+      validUntil: string;
+    }
+  | {
+      kind: "worksCouncil";
+      app: string;
+      decision: "approved" | "rejected";
+      /** ISO date. */
+      date: string;
+    };
+
+export type AttachmentKind = Attachment["kind"];
+
+/** A software request ticket: "please buy us X, because Y". */
 export type Demand = {
   id: string;
-  /** Who brings the request to the desk. */
+  /** Ticket number shown to the player, e.g. "REQ-1004". */
+  ticket: string;
   requester: { name: string; role: string };
-  requestedApp: string;
-  reason: string;
-  /** Catalog page the app joins if bought. */
+  /** The requester's department, which is also the business area the app would serve. */
   capabilityId: string;
-  /** What buying the requested app would cost per year. */
+  app: string;
+  vendor: string;
+  /** What the app would cost per year. */
   cost: number;
-  /** Hidden from the player: the catalog app that fits, or null if nothing fits. */
+  reason: string;
+  /** Who approved the request, or null if nobody did. */
+  sponsor: string | null;
+  monitorsEmployees: boolean;
+  /** The app the requester offers to switch off in return, or null. */
+  retires: string | null;
+  attachments: Attachment[];
+  /** Hidden from the player: the catalog app that already covers the need, or null. */
   matchId: string | null;
 };
 
-export type Decision = { kind: "buy" } | { kind: "decline" } | { kind: "offer"; appId: string };
-
-export type Outcome = "bought" | "matched" | "mismatched" | "declined";
+export type Decision = { kind: "approve" } | { kind: "decline" } | { kind: "offer"; appId: string };
 
 export type Resolution = {
   demand: Demand;
   decision: Decision;
-  outcome: Outcome;
-  spent: number;
-  happiness: number;
+  day: number;
+  /** Game clock (minutes since midnight) when it was decided. */
+  at: number;
+  /** Why the decision was wrong, or null if it was right. */
+  citation: string | null;
 };
 
+export type Phase =
+  /** Reading today's memo before the first appointment. */
+  | "briefing"
+  | "working"
+  /** Day's over: the summary before the next briefing. */
+  | "dayEnd"
+  | "fired"
+  | "won";
+
 export type GameState = {
-  /** Waiting demands. The first one is at the desk. */
+  phase: Phase;
+  /** 1 to `LAST_DAY`. */
+  day: number;
+  /** Minutes since midnight, fractional while the clock runs. */
+  clock: number;
+  /** When the appointment at the desk ends. Later appointments follow back to back. */
+  deadline: number;
+  /** Today's appointments. The first one is at the desk. */
   queue: Demand[];
+  /** Requests that didn't get handled; they come first tomorrow. */
+  backlog: Demand[];
+  /** Every decision this run. */
   log: Resolution[];
-  /** Apps the company owns: the starting catalog plus everything bought today. */
-  portfolio: CatalogApp[];
-  /** Yearly spend on the existing portfolio when the day started. */
-  startingSpend: number;
-  /** Total yearly spend: starting spend plus everything bought today. */
-  spent: number;
-  happiness: number;
+  mistakes: number;
+  /** Game clock when finishing early took a mistake back today, or null. */
+  forgivenAt: number | null;
+  /** New requests for every day, generated when the run starts. */
+  days: Demand[][];
+  firedFor: "mistakes" | "backlog" | null;
 };

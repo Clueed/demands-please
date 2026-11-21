@@ -1,34 +1,33 @@
 import { describe, expect, it } from "vitest";
 
-import { CATALOG, DEMANDS } from "@/game/data";
-import { newGame, resolve } from "@/game/engine";
+import { newGame, push, startDay, tick } from "@/game/engine";
+import { generateDays } from "@/game/generate";
+import { DAY_START, PUSH_MINUTES, SLOT_MINUTES } from "@/game/time";
 
-import { agenda, clock } from "./calendar";
+import { HOUR_PX, timeline, TIMELINE_H, timelineY } from "./calendar";
 
-describe("clock", () => {
-  it("formats minutes since midnight", () => {
-    expect(clock(9 * 60)).toBe("09:00");
-    expect(clock(13 * 60 + 30)).toBe("13:30");
+const fullDay = () => {
+  const days = generateDays(7).map((d) => [...d, ...d.slice(0, 1)]);
+  return startDay(newGame(7, days));
+};
+
+describe("timeline", () => {
+  it("lays the day out an hour per appointment from 09:00, the first one at the desk", () => {
+    const t = timeline(fullDay());
+    expect(t.blocks.map((b) => b.time).slice(0, 3)).toEqual(["09:00", "10:00", "11:00"]);
+    expect(t.blocks.map((b) => b.y).slice(0, 3)).toEqual([0, HOUR_PX, 2 * HOUR_PX]);
+    expect(t.blocks.filter((b) => b.atDesk)).toHaveLength(1);
+    expect(t.blocks.at(-1)!.y + t.blocks.at(-1)!.h).toBe(TIMELINE_H);
+    expect(t.afterHours).toBe(0);
   });
-});
 
-describe("agenda", () => {
-  it("lists every demand in half-hour slots from 09:00, first one now", () => {
-    const day = agenda(newGame(DEMANDS, CATALOG));
-    expect(day).toHaveLength(DEMANDS.length);
-    expect(day.map((a) => a.time).slice(0, 3)).toEqual(["09:00", "09:30", "10:00"]);
-    expect(day.map((a) => a.status)).toEqual(["now", ...DEMANDS.slice(1).map(() => "later")]);
+  it("moves the now line with the clock", () => {
+    expect(timeline(tick(fullDay(), 30)).nowY).toBe(timelineY(DAY_START + 30));
   });
 
-  it("keeps resolved appointments in their slot, marked done with the outcome", () => {
-    const state = resolve(newGame(DEMANDS, CATALOG), { kind: "decline" });
-    const [first, second] = agenda(state);
-    expect(first).toMatchObject({
-      time: "09:00",
-      demand: DEMANDS[0],
-      status: "done",
-      outcome: "declined",
-    });
-    expect(second).toMatchObject({ time: "09:30", demand: DEMANDS[1], status: "now" });
+  it("pushing past closing time moves appointments after hours", () => {
+    const t = timeline(push(push(fullDay())));
+    expect(t.afterHours).toBe(1);
+    expect(t.blocks[0]!.h).toBe(timelineY(DAY_START + SLOT_MINUTES + 2 * PUSH_MINUTES));
   });
 });

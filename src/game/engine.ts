@@ -1,103 +1,182 @@
-import { clamp } from "@/lib/utils";
+import { generateDays } from "./generate";
+import { judge } from "./rules";
+import {
+  BACKLOG_LIMIT,
+  DAY_END,
+  DAY_START,
+  LAST_DAY,
+  MAX_MISTAKES,
+  PUSH_MINUTES,
+  SLOT_MINUTES,
+} from "./time";
+import type { Decision, Demand, GameState, Resolution } from "./types";
 
-import type { CatalogApp, Decision, Demand, GameState, Outcome, Resolution } from "./types";
+/**
+ * Finishing this far ahead of schedule, with a mistake on record, takes the mistake back.
+ * Once a day at most: otherwise rushing through blind would clear every mistake it makes.
+ */
+export const FORGIVE_MINUTES = 60;
 
-/** Happiness change per outcome. Money is always the demand's cost (bought) or 0. */
-export const HAPPINESS: Record<Outcome, number> = {
-  bought: 1,
-  matched: 1,
-  mismatched: -1,
-  declined: -1,
-};
-
-/** Happiness is a 0–10 scale that starts in the middle. */
-export const HAPPINESS_SCALE = { min: 0, max: 10, start: 5 };
-
-const clampHappiness = (n: number) => clamp(n, HAPPINESS_SCALE.min, HAPPINESS_SCALE.max);
-
-/** Total spend starts at what the existing portfolio already costs. */
-export function newGame(demands: Demand[], catalog: CatalogApp[]): GameState {
-  const startingSpend = catalog.reduce((sum, app) => sum + app.spend, 0);
+/** A run, waiting at the first morning's briefing. */
+export function newGame(seed: number, days: Demand[][] = generateDays(seed)): GameState {
   return {
-    queue: [...demands],
+    phase: "briefing",
+    day: 1,
+    clock: DAY_START,
+    deadline: DAY_START + SLOT_MINUTES,
+    queue: days[0] ?? [],
+    backlog: [],
     log: [],
-    portfolio: [...catalog],
-    startingSpend,
-    spent: startingSpend,
-    happiness: HAPPINESS_SCALE.start,
+    mistakes: 0,
+    forgivenAt: null,
+    days,
+    firedFor: null,
   };
 }
 
 export function currentDemand(state: GameState): Demand | undefined {
-  return state.queue[0];
+  return state.phase === "working" ? state.queue[0] : undefined;
 }
 
-export function isOver(state: GameState): boolean {
-  return state.queue.length === 0;
+/** The decision already made on the request at the desk, if any. */
+export function currentResolution(state: GameState): Resolution | undefined {
+  const demand = currentDemand(state);
+  const last = state.log.at(-1);
+  return demand && last?.demand.id === demand.id && last.day === state.day ? last : undefined;
 }
 
-export function outcomeOf(demand: Demand, decision: Decision): Outcome {
-  if (decision.kind === "buy") return "bought";
-  if (decision.kind === "decline") return "declined";
-  return decision.appId === demand.matchId ? "matched" : "mismatched";
+/** The briefing is read: the clock starts. */
+export function startDay(state: GameState): GameState {
+  if (state.phase !== "briefing") return state;
+  return { ...state, phase: "working" };
 }
 
-/** Apply the player's decision to the demand at the desk and move the queue on. */
-export function resolve(state: GameState, decision: Decision): GameState {
-  const [demand, ...rest] = state.queue;
-  if (!demand) return state;
+/** Stamp the request at the desk. It stays there until "next" or its time runs out. */
+export function decide(state: GameState, decision: Decision): GameState {
+  const demand = currentDemand(state);
+  if (!demand || currentResolution(state)) return state;
 
-  const outcome = outcomeOf(demand, decision);
-  const happiness = clampHappiness(state.happiness + HAPPINESS[outcome]);
-  const resolution: Resolution = {
-    demand,
-    decision,
-    outcome,
-    spent: outcome === "bought" ? demand.cost : 0,
-    // The change actually applied, so 0 when already at the top or bottom of the scale.
-    happiness: happiness - state.happiness,
-  };
-
+  const citation = judge(demand, decision, state.day);
+  const resolution: Resolution = { demand, decision, day: state.day, at: state.clock, citation };
+  const mistakes = state.mistakes + (citation ? 1 : 0);
   return {
     ...state,
-    queue: rest,
     log: [...state.log, resolution],
-    portfolio: outcome === "bought" ? [...state.portfolio, toCatalogApp(demand)] : state.portfolio,
-    spent: state.spent + resolution.spent,
-    happiness,
+    mistakes,
+    ...(mistakes > MAX_MISTAKES && { phase: "fired", firedFor: "mistakes" }),
   };
 }
 
-/** A bought app joins the portfolio; its price becomes its yearly spend. */
-export function toCatalogApp(demand: Demand): CatalogApp {
+/**
+ * Send the visitor off and call in the next one. Their appointment keeps its slot, so time
+ * saved now carries over. Saving a whole hour with a mistake on record takes the mistake
+ * back instead, once a day; the hour is spent on it.
+ */
+export function next(state: GameState): GameState {
+  const resolution = currentResolution(state);
+  if (!resolution) return state;
+  // Only a mistake made before this ticket; else a quick wrong guess would cancel itself.
+  const earlier = state.mistakes - (resolution.citation ? 1 : 0);
+  const forgive =
+    earlier > 0 && state.forgivenAt === null && state.deadline - state.clock >= FORGIVE_MINUTES;
+  return advance({
+    ...state,
+    queue: state.queue.slice(1),
+    deadline: state.deadline + SLOT_MINUTES - (forgive ? FORGIVE_MINUTES : 0),
+    mistakes: state.mistakes - (forgive ? 1 : 0),
+    forgivenAt: forgive ? state.clock : state.forgivenAt,
+  });
+}
+
+/** Give the visitor more time; every appointment after theirs moves back too. */
+export function push(state: GameState): GameState {
+  if (!currentDemand(state)) return state;
+  return { ...state, deadline: state.deadline + PUSH_MINUTES };
+}
+
+/** Run the clock forward. */
+export function tick(state: GameState, minutes: number): GameState {
+  if (state.phase !== "working") return state;
+  return advance({ ...state, clock: Math.min(DAY_END, state.clock + minutes) });
+}
+
+/**
+ * Settle the clock: anyone whose time is up leaves, undecided ones into the backlog, and the
+ * day ends at closing time or once nobody's waiting.
+ */
+function advance(state: GameState): GameState {
+  let s = state;
+  while (s.queue.length > 0 && s.clock >= s.deadline && s.clock < DAY_END) {
+    const [demand, ...rest] = s.queue;
+    s = {
+      ...s,
+      queue: rest,
+      backlog: currentResolution(s) || !demand ? s.backlog : [...s.backlog, demand],
+      deadline: s.deadline + SLOT_MINUTES,
+    };
+  }
+  if (s.queue.length > 0 && s.clock < DAY_END) return s;
+  return endDay(s);
+}
+
+function endDay(state: GameState): GameState {
+  const [first, ...rest] = state.queue;
+  const leftover = first && !currentResolution(state) ? state.queue : rest;
+  const backlog = [...state.backlog, ...leftover];
+  const fired = backlog.length > BACKLOG_LIMIT;
   return {
-    id: `bought-${demand.id}`,
-    name: demand.requestedApp,
-    capabilityId: demand.capabilityId,
-    description: demand.reason,
-    tags: [],
-    spend: demand.cost,
+    ...state,
+    queue: [],
+    backlog,
+    phase: fired ? "fired" : state.day === LAST_DAY ? "won" : "dayEnd",
+    firedFor: fired ? "backlog" : null,
   };
 }
 
-export type Summary = {
-  spent: number;
-  happiness: number;
-  startingSpend: number;
-  /** Total spend if every demand had simply been bought. */
-  buyEverythingCost: number;
-  matchesFound: number;
-  matchesPossible: number;
-};
-
-export function summarize(state: GameState): Summary {
-  const demands = state.log.map((r) => r.demand);
+/** Next morning: yesterday's backlog comes first, then today's new requests. */
+export function nextDay(state: GameState): GameState {
+  if (state.phase !== "dayEnd") return state;
+  const day = state.day + 1;
   return {
-    spent: state.spent,
-    happiness: state.happiness,
-    startingSpend: state.startingSpend,
-    buyEverythingCost: demands.reduce((sum, d) => sum + d.cost, state.startingSpend),
-    matchesFound: state.log.filter((r) => r.outcome === "matched").length,
-    matchesPossible: demands.filter((d) => d.matchId !== null).length,
+    ...state,
+    phase: "briefing",
+    day,
+    clock: DAY_START,
+    deadline: DAY_START + SLOT_MINUTES,
+    queue: [...state.backlog, ...(state.days[day - 1] ?? [])],
+    backlog: [],
+    forgivenAt: null,
   };
+}
+
+/**
+ * Where everyone still waiting is in the calendar. The one at the desk runs until the
+ * deadline, the rest follow an hour each. Anyone starting after closing time won't be seen.
+ */
+export function schedule(state: GameState) {
+  return state.queue.map((demand, i) => {
+    const start =
+      i === 0
+        ? Math.min(state.clock, state.deadline - SLOT_MINUTES)
+        : state.deadline + (i - 1) * SLOT_MINUTES;
+    const end = i === 0 ? state.deadline : start + SLOT_MINUTES;
+    return { demand, start, end, atDesk: i === 0, afterHours: start >= DAY_END };
+  });
+}
+
+export type DaySummary = { decided: number; mistakes: number; backlog: number };
+
+export function summarizeDay(state: GameState): DaySummary {
+  const today = state.log.filter((r) => r.day === state.day);
+  return {
+    decided: today.length,
+    mistakes: today.filter((r) => r.citation).length,
+    backlog: state.backlog.length,
+  };
+}
+
+/** Skip straight to a day's briefing with a clean record, for playtesting. */
+export function jumpToDay(state: GameState, day: number): GameState {
+  const d = Math.min(Math.max(1, Math.floor(day)), state.days.length);
+  return { ...state, day: d, queue: state.days[d - 1] ?? [] };
 }

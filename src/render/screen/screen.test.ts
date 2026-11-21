@@ -30,52 +30,67 @@ describe("screenReducer", () => {
     }
   });
 
+  it("starts with the calendar, rulebook and ticket open, attachments closed", () => {
+    expect(initialScreen().order).toEqual(["calendar", "rulebook", "ticket"]);
+  });
+
   it("moves a window, letting it hang off the screen", () => {
     const screen = initialScreen();
 
-    const moved = screenReducer(screen, { type: "move", id: "form", x: 10, y: 20 });
-    expect(moved.windows.form).toMatchObject({ x: 10, y: 20 });
+    const moved = screenReducer(screen, { type: "move", id: "ticket", x: 10, y: 20 });
+    expect(moved.windows.ticket).toMatchObject({ x: 10, y: 20 });
 
-    const hanging = screenReducer(screen, { type: "move", id: "form", x: -40, y: 200 });
-    expect(hanging.windows.form).toMatchObject({ x: -40, y: 200 });
+    const hanging = screenReducer(screen, { type: "move", id: "ticket", x: -40, y: 200 });
+    expect(hanging.windows.ticket).toMatchObject({ x: -40, y: 200 });
   });
 
   it("always keeps a strip of the window on screen to grab it back", () => {
     const screen = initialScreen();
-    const form = screen.windows.form;
+    const ticket = screen.windows.ticket;
 
-    const farAway = screenReducer(screen, { type: "move", id: "form", x: 9999, y: 9999 });
-    expect(farAway.windows.form).toMatchObject({
+    const farAway = screenReducer(screen, { type: "move", id: "ticket", x: 9999, y: 9999 });
+    expect(farAway.windows.ticket).toMatchObject({
       x: REGIONS.screen.w - MIN_VISIBLE,
       y: REGIONS.screen.h - MIN_VISIBLE,
     });
 
-    const farBack = screenReducer(screen, { type: "move", id: "form", x: -9999, y: -9999 });
-    expect(farBack.windows.form).toMatchObject({
-      x: MIN_VISIBLE - form.w,
-      y: MIN_VISIBLE - form.h,
+    const farBack = screenReducer(screen, { type: "move", id: "ticket", x: -9999, y: -9999 });
+    expect(farBack.windows.ticket).toMatchObject({
+      x: MIN_VISIBLE - ticket.w,
+      y: MIN_VISIBLE - ticket.h,
     });
   });
 
   it("snaps to whole game pixels", () => {
-    const moved = screenReducer(initialScreen(), { type: "move", id: "form", x: 10.4, y: 20.6 });
-    expect(moved.windows.form).toMatchObject({ x: 10, y: 21 });
+    const moved = screenReducer(initialScreen(), { type: "move", id: "ticket", x: 10.4, y: 20.6 });
+    expect(moved.windows.ticket).toMatchObject({ x: 10, y: 21 });
   });
 
   it("keeps the same state when a move changes nothing", () => {
     const screen = initialScreen();
-    const { x, y } = screen.windows.form;
-    expect(screenReducer(screen, { type: "move", id: "form", x: x + 0.2, y })).toBe(screen);
+    const { x, y } = screen.windows.ticket;
+    expect(screenReducer(screen, { type: "move", id: "ticket", x: x + 0.2, y })).toBe(screen);
   });
 
   it("raises a window to the top of the stack", () => {
     const screen = initialScreen();
-    expect(screenReducer(screen, { type: "raise", id: "binder" }).order).toEqual([
+    expect(screenReducer(screen, { type: "raise", id: "rulebook" }).order).toEqual([
       "calendar",
-      "gauges",
-      "form",
-      "binder",
+      "ticket",
+      "rulebook",
     ]);
-    expect(screenReducer(screen, { type: "raise", id: "form" })).toBe(screen);
+    expect(screenReducer(screen, { type: "raise", id: "ticket" })).toBe(screen);
+  });
+
+  it("opens attachments on top and puts them all away together", () => {
+    let screen = screenReducer(initialScreen(), { type: "raise", id: "vendorSheet" });
+    screen = screenReducer(screen, { type: "raise", id: "certificate" });
+    expect(screen.order.slice(-2)).toEqual(["vendorSheet", "certificate"]);
+    expect(screenReducer(screen, { type: "close", id: "certificate" }).order).not.toContain(
+      "certificate",
+    );
+    expect(screenReducer(screen, { type: "closeAttachments" }).order).toEqual(
+      initialScreen().order,
+    );
   });
 });

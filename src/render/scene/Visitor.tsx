@@ -1,7 +1,7 @@
 import type { Demand } from "@/game/types";
 
 import { departmentColor } from "../departments";
-import { money } from "../format";
+import { money } from "@/lib/format";
 import { Px } from "./Px";
 
 const FONT = "'Office Pixel', 'Geist Variable', monospace";
