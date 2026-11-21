@@ -77,6 +77,11 @@ export function Visitor({ demand, ticket }: { demand: Demand | undefined; ticket
             <Px d="M54 102h8v2h-8Z" fill="#aa8670" />
             <Px d="M56 104h4v4h-4Zm26-2h4v6h-4Z" fill="#2c3431" />
             <Px d="M84 102h2v2h-2Z" fill="#f1ecd9" />
+            {/* Eyelids, shown for a blink */}
+            <g className="visitor-blink">
+              <Px d="M54 102h8v4h-8Zm26-2h8v6h-8Z" fill="#b58f74" />
+              <Px d="M54 106h8v2h-8Zm26 0h8v2h-8Z" fill="#4a3f36" />
+            </g>
             {/* Nose */}
             <Px d="M70 106h4v10h4v4h-8Z" fill="#aa8670" />
             {/* Cheeks and a lopsided, slightly too eager smile */}

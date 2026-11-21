@@ -65,6 +65,15 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
         <rect x={windowX + 6} y="34" width="168" height="148" fill="url(#blinds)" />
         <rect x={windowX + 88} y="34" width="4" height="148" fill="#89968b" />
         <rect x={windowX + 154} y="36" width="2" height="130" fill="#747f72" />
+        {/* Now and then a cloud passes and the light through the blinds dims. */}
+        <rect
+          x={windowX + 6}
+          y="34"
+          width="168"
+          height="148"
+          fill="#5f6d6a"
+          className="window-cloud"
+        />
         <rect x={windowX - 4} y="186" width="188" height="6" fill="#dad9c3" />
         <rect x={windowX - 4} y="192" width="188" height="2" fill="#9aa392" />
 
@@ -279,7 +288,7 @@ export function Room({ visitor, screen }: { visitor: ReactNode; screen: ReactNod
           kind="mug"
           bounds={desk}
           transform={at(440, deskBack + 16 + drop)}
-          label="Coffee. Cold."
+          label="Coffee. Lukewarm."
         >
           <Px d="M-6 22h24v4H-6Z" fill={SHADOW} />
           <Px d="M18 6h8v14h-8Z" fill="#4a3127" />
