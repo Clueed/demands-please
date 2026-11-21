@@ -1,12 +1,14 @@
+import { CalendarDays, Files, FileText, PieChart } from "lucide-react";
 import { useEffect, useRef, type Dispatch, type PointerEvent, type ReactNode } from "react";
 
-import { Placeholder } from "../Placeholder";
+import { rectStyle } from "../layout";
 import { toGamePx } from "../stage";
 import { useFit } from "../stageFitContext";
 import { clampPointer, type ScreenAction, type ScreenState, type WindowId } from "./screen";
 
 /** How far (game pixels) the pointer must move before a press becomes a drag. */
 const DRAG_THRESHOLD = 3;
+const WINDOW_ICONS = { calendar: CalendarDays, binder: Files, form: FileText, gauges: PieChart };
 
 /**
  * A window on the monitor: press to bring to the front, drag to move.
@@ -16,16 +18,20 @@ const DRAG_THRESHOLD = 3;
 export function ScreenWindow({
   id,
   label,
+  align = "start",
   screen,
   dispatch,
   children,
 }: {
   id: WindowId;
   label: string;
+  /** "end" lays the title bar out from the right, for a window that hangs off the left edge. */
+  align?: "start" | "end";
   screen: ScreenState;
   dispatch: Dispatch<ScreenAction>;
   children?: ReactNode;
 }) {
+  const Icon = WINDOW_ICONS[id];
   const fit = useFit();
   const press = useRef<AbortController | null>(null);
   const rect = screen.windows[id];
@@ -35,7 +41,12 @@ export function ScreenWindow({
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     dispatch({ type: "raise", id });
-    if (e.button !== 0) return;
+    if (
+      e.button !== 0 ||
+      !(e.target instanceof Element) ||
+      !e.target.closest("[data-window-handle]")
+    )
+      return;
 
     // Listen on the window rather than capturing the pointer: capture would retarget the
     // click away from controls, and without either a fast move could leave the window.
@@ -69,14 +80,24 @@ export function ScreenWindow({
   };
 
   return (
-    <Placeholder
-      label={label}
-      rect={rect}
-      className="cursor-grab touch-none bg-neutral-200"
-      style={{ zIndex: screen.order.indexOf(id) + 1 }}
+    <section
+      aria-label={label}
+      className="office-window absolute flex flex-col"
+      data-active={screen.order.at(-1) === id}
+      style={{ ...rectStyle(rect), zIndex: screen.order.indexOf(id) + 1 }}
       onPointerDown={onPointerDown}
     >
+      <div
+        data-window-handle
+        className={`office-titlebar flex shrink-0 cursor-grab touch-none items-center justify-between px-4 text-game-sm ${align === "end" ? "flex-row-reverse" : ""}`}
+      >
+        <span className="flex items-center gap-3">
+          <Icon aria-hidden="true" />
+          {label}
+        </span>
+        <span className="office-titlebar-ridges" aria-hidden="true" />
+      </div>
       {children}
-    </Placeholder>
+    </section>
   );
 }

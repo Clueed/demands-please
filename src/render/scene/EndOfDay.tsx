@@ -25,11 +25,11 @@ export function EndOfDay({ state, onRestart }: { state: GameState; onRestart: ()
         className="bg-neutral-100"
       >
         <p className="px-1">
-          Spend {money(s.spent)}/yr
+          License spend {money(s.spent)}/yr
           <br />
           (started {money(s.startingSpend)}, buy-all {money(s.buyEverythingCost)})
           <br />
-          Happiness {s.happiness}/{HAPPINESS_SCALE.max}
+          IT NPS score {s.happiness}/{HAPPINESS_SCALE.max}
           <br />
           Matches {s.matchesFound} of {s.matchesPossible}
         </p>

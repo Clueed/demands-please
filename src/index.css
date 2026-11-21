@@ -144,3 +144,496 @@
     @apply font-sans;
   }
 }
+
+/*
+ * The desktop's one typeface: Pixelify Sans, except the euro sign, which it draws like an 8.
+ * Its range leaves out U+20AC, so € falls through to Geist, and the digits (see below).
+ */
+@font-face {
+  font-family: "DotGothic16";
+  src: url("../node_modules/@fontsource/dotgothic16/files/dotgothic16-latin-400-normal.woff2")
+    format("woff2");
+  font-weight: 100 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "Office Pixel";
+  src: url("../node_modules/@fontsource/pixelify-sans/files/pixelify-sans-latin-400-normal.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-display: block;
+  unicode-range: U+0000-002F, U+003A-0041, U+0044-20AB, U+20AD-FFFF;
+}
+@font-face {
+  font-family: "Office Pixel";
+  src: url("../node_modules/@fontsource/pixelify-sans/files/pixelify-sans-latin-500-normal.woff2")
+    format("woff2");
+  font-weight: 500 900;
+  font-display: block;
+  unicode-range: U+0000-002F, U+003A-0041, U+0044-20AB, U+20AD-FFFF;
+}
+
+/* Plain Pixelify, for the nameplate, where caps must share one height. */
+@font-face {
+  font-family: "Pixelify Plain";
+  src: url("../node_modules/@fontsource/pixelify-sans/files/pixelify-sans-latin-400-normal.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+
+/* Pixelify's 5 reads as an S, so the figures come from DotGothic16, also on a pixel grid. */
+@font-face {
+  font-family: "Office Pixel";
+  src: url("../node_modules/@fontsource/dotgothic16/files/dotgothic16-latin-400-normal.woff2")
+    format("woff2");
+  font-weight: 100 900;
+  font-display: block;
+  unicode-range: U+0030-0039, U+0042-0043;
+}
+
+/*
+ * Draft 03: the desktop lives on the room's pixel grid. One pixel typeface, square corners,
+ * 1 game pixel borders, hard offset shadows, and paper toned down to the room's light.
+ * Accents come from props in the room: the mug red, the sticky-note ochre, the plant green.
+ */
+.office-display {
+  --gp: var(--game-px);
+  --pixel: "Office Pixel", "Geist Variable", monospace;
+  /* All-caps labels use one face throughout, so no letter looks borrowed. */
+  --pixel-caps: "DotGothic16", "Geist Variable", monospace;
+  --ink: #2b3f39;
+  --ink-soft: #33463e;
+  --paper: #d8d7c3;
+  --paper-hi: #e1dfcc;
+  --paper-lo: #cfd1bd;
+  --rule: #aeb6a1;
+  --frame: #3d544b;
+  --green: #557a5c;
+  --green-dk: #3b5a43;
+  --red: #9e6656;
+  --red-dk: #7a4a3e;
+  --ochre: #cdbb86;
+  --color-neutral-100: #eeead7;
+  --color-neutral-200: #dddcc8;
+  --color-neutral-300: #c6ccba;
+  --color-neutral-500: #718176;
+  --color-neutral-800: #2e443e;
+  --color-neutral-900: #20332f;
+  color: var(--ink);
+}
+/* Glass: a recessed edge, a soft glare from the window on the right, darker corners. */
+.office-display::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+        to bottom,
+        #ffffff0d 0 calc(var(--gp) * 3),
+        transparent calc(var(--gp) * 3) calc(var(--gp) * 6)
+      )
+      right calc(var(--gp) * 10) top calc(var(--gp) * 14) / calc(var(--gp) * 40)
+      calc(var(--gp) * 60) no-repeat,
+    radial-gradient(ellipse 80% 75% at 50% 45%, transparent 60%, #0d1d1b5e 100%);
+  box-shadow:
+    inset 0 calc(var(--gp) * 3) 0 #0a151480,
+    inset calc(var(--gp) * 2) 0 0 #0a151459,
+    inset calc(var(--gp) * -1) 0 0 #0a151440;
+}
+
+.office-desktop {
+  background-color: #586f68;
+  background-image:
+    linear-gradient(45deg, #4f6c6355 25%, transparent 25% 75%, #4f6c6355 75%),
+    linear-gradient(45deg, #4f6c6355 25%, transparent 25% 75%, #4f6c6355 75%);
+  background-size: calc(var(--gp) * 4) calc(var(--gp) * 4);
+  background-position:
+    0 0,
+    calc(var(--gp) * 2) calc(var(--gp) * 2);
+  font-family: var(--pixel);
+  font-size: calc(var(--gp) * 6.5);
+  line-height: calc(var(--gp) * 8);
+}
+.office-desktop b,
+.office-desktop strong,
+.office-desktop h2 {
+  font-weight: 600;
+}
+
+/* Window chrome is drawn on the same 2-pixel grid as the room around the monitor. */
+.office-window {
+  background: var(--paper);
+  border: calc(var(--gp) * 2) solid var(--frame);
+  overflow: hidden;
+  box-shadow: calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #1d302c4d;
+}
+.office-window[data-active="true"] {
+  border-color: #233a33;
+  box-shadow: calc(var(--gp) * 4) calc(var(--gp) * 4) 0 #14282488;
+}
+/* Reference windows recede behind the active one. */
+.office-window[data-active="false"] > :not(.office-titlebar) {
+  filter: saturate(0.8) brightness(0.96);
+}
+.office-titlebar {
+  height: calc(var(--gp) * 13);
+  padding: 0 calc(var(--gp) * 3);
+  gap: calc(var(--gp) * 3);
+  background: #b9c2b0;
+  color: #34483f;
+  font-size: calc(var(--gp) * 7);
+  line-height: 1;
+  border-bottom: calc(var(--gp) * 2) solid #93a08d;
+}
+.office-window[data-active="true"] .office-titlebar {
+  background: #3f6555;
+  color: #f2efd8;
+  border-bottom-color: #233a33;
+}
+.office-titlebar:active {
+  cursor: grabbing;
+}
+.office-titlebar svg {
+  width: calc(var(--gp) * 7);
+  height: calc(var(--gp) * 7);
+  flex-shrink: 0;
+}
+/* Classic grab ridges filling the rest of the title bar. */
+.office-titlebar-ridges {
+  flex: 1;
+  height: calc(var(--gp) * 6);
+  background: repeating-linear-gradient(
+    180deg,
+    #0000001f 0 calc(var(--gp) * 2),
+    transparent calc(var(--gp) * 2) calc(var(--gp) * 4)
+  );
+}
+.office-window[data-active="true"] .office-titlebar-ridges {
+  background: repeating-linear-gradient(
+    180deg,
+    #ffffff2e 0 calc(var(--gp) * 2),
+    transparent calc(var(--gp) * 2) calc(var(--gp) * 4)
+  );
+}
+.office-toolbar {
+  flex-shrink: 0;
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 4);
+  background: var(--paper-lo);
+  color: var(--ink-soft);
+  border-bottom: var(--gp) solid var(--rule);
+}
+.office-muted {
+  color: #2b3d36;
+}
+.office-number {
+  font-variant-numeric: tabular-nums;
+}
+.office-label {
+  font-family: var(--pixel-caps);
+  font-weight: 400;
+  font-size: calc(var(--gp) * 6);
+  line-height: calc(var(--gp) * 8);
+  text-transform: uppercase;
+  letter-spacing: calc(var(--gp) * 0.5);
+  color: var(--ink-soft);
+}
+.office-scroll {
+  scrollbar-width: none;
+}
+
+.office-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--gp) * 2);
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 4);
+  border: var(--gp) solid #2f4740;
+  background: var(--paper-hi);
+  color: var(--ink);
+  box-shadow:
+    inset calc(var(--gp) * -1) calc(var(--gp) * -2) 0 #aab39c,
+    inset var(--gp) var(--gp) 0 #f1f0e2;
+  font-size: calc(var(--gp) * 6.5);
+  line-height: calc(var(--gp) * 8);
+  cursor: pointer;
+}
+.office-control svg {
+  width: calc(var(--gp) * 7);
+  height: calc(var(--gp) * 7);
+  stroke-width: 2.5;
+}
+.office-control:hover:enabled {
+  background: #eeeddf;
+}
+.office-control:active:enabled {
+  box-shadow: inset var(--gp) var(--gp) 0 #0003;
+  transform: translateY(var(--gp));
+}
+.office-control:focus-visible {
+  outline: var(--gp) solid #2e755d;
+  outline-offset: var(--gp);
+}
+.office-control:disabled {
+  cursor: default;
+}
+.office-approve,
+.office-decline {
+  flex-direction: column;
+  gap: 0;
+  padding: calc(var(--gp) * 3) calc(var(--gp) * 3);
+}
+.office-approve > span,
+.office-decline > span {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--gp) * 2);
+  font-size: calc(var(--gp) * 9);
+  line-height: calc(var(--gp) * 10);
+}
+.office-approve {
+  background: #46705e;
+  color: #fbf8e6;
+  border-color: #1f342c;
+  box-shadow:
+    inset calc(var(--gp) * -2) calc(var(--gp) * -2) 0 #2c4a3e,
+    inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #6a8c7c;
+}
+.office-decline {
+  background: #7f564a;
+  color: #f5ecda;
+  border-color: #4f2a22;
+  box-shadow:
+    inset calc(var(--gp) * -2) calc(var(--gp) * -2) 0 var(--red-dk),
+    inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #a8705f;
+}
+.office-approve:hover:enabled {
+  background: #4a7262;
+}
+.office-decline:hover:enabled {
+  background: #ab7262;
+}
+
+/* The calendar hangs off the left edge, so its rows read from the right. */
+.office-appointment {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: right;
+  padding: calc(var(--gp) * 3) calc(var(--gp) * 4);
+  border-bottom: var(--gp) solid var(--rule);
+  border-left: calc(var(--gp) * 2) solid transparent;
+}
+.office-appointment time {
+  color: var(--ink-soft);
+}
+.office-appointment.is-now {
+  background: #bccfb3;
+  border-left-color: var(--green);
+}
+.office-appointment.is-now .office-label {
+  color: #f3f0da;
+  background: var(--green);
+  padding: 0 calc(var(--gp) * 2);
+}
+.office-appointment.is-done {
+  color: #6f7d73;
+}
+
+/* Filters are tabs attached to the list below them. */
+.office-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gp) var(--gp);
+  padding: calc(var(--gp) * 3) calc(var(--gp) * 3) 0;
+  background: var(--paper-lo);
+  border-bottom: var(--gp) solid var(--frame);
+}
+.office-category {
+  margin-bottom: calc(var(--gp) * -1);
+  padding: var(--gp) calc(var(--gp) * 3);
+  border: var(--gp) solid var(--frame);
+  background: #c2c7b2;
+  color: var(--ink-soft);
+  font-size: calc(var(--gp) * 6.5);
+  line-height: calc(var(--gp) * 8);
+  cursor: pointer;
+}
+.office-category:hover {
+  background: #d3d6c3;
+}
+.office-category[aria-pressed="true"] {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  color: var(--green-dk);
+  background: var(--paper-hi);
+  border-bottom-color: var(--paper-hi);
+  box-shadow: inset 0 calc(var(--gp) * 2) 0 var(--green);
+}
+.office-app-card {
+  margin-top: calc(var(--gp) * 5);
+  padding: calc(var(--gp) * 5) calc(var(--gp) * 5);
+  font-size: calc(var(--gp) * 8);
+  line-height: calc(var(--gp) * 10);
+  background: var(--paper);
+  border: var(--gp) solid #c4c8b4;
+}
+.office-app-card .office-number {
+  font-size: calc(var(--gp) * 7);
+}
+.office-desc {
+  margin-top: calc(var(--gp) * 2);
+  font-size: calc(var(--gp) * 7);
+  line-height: calc(var(--gp) * 9);
+  color: var(--ink);
+}
+/* Offering is the secondary move: a quiet link until hovered. */
+.office-offer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gp);
+  padding: 0 calc(var(--gp) * 2);
+  margin-left: calc(var(--gp) * -2);
+  margin-top: calc(var(--gp) * 2);
+  color: #2f5a48;
+  text-decoration: underline;
+  text-decoration-thickness: var(--gp);
+  text-underline-offset: calc(var(--gp) * 2);
+  font-size: calc(var(--gp) * 7);
+  cursor: pointer;
+}
+.office-offer:hover:enabled {
+  background: var(--paper-lo);
+  text-decoration: none;
+  outline: var(--gp) solid var(--frame);
+}
+.office-offer svg {
+  width: calc(var(--gp) * 6);
+  height: calc(var(--gp) * 6);
+}
+
+.office-metrics strong {
+  font-size: calc(var(--gp) * 10);
+  line-height: calc(var(--gp) * 12);
+}
+/* The score as ten chunky blocks, like a battery indicator. */
+.office-meter {
+  display: flex;
+  gap: var(--gp);
+  margin-top: var(--gp);
+}
+.office-meter span {
+  flex: 1;
+  height: calc(var(--gp) * 5);
+  background: var(--paper-hi);
+  box-shadow: inset 0 0 0 var(--gp) #9aa697;
+}
+.office-meter span[data-on="true"] {
+  background: #4f6f5a;
+  box-shadow: inset 0 calc(var(--gp) * -1) 0 var(--green-dk);
+}
+
+.office-form {
+  background: var(--paper-hi);
+}
+.office-requester {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gp) * 3);
+  padding-bottom: calc(var(--gp) * 3);
+  border-bottom: calc(var(--gp) * 2) solid var(--rule);
+}
+.office-avatar {
+  display: grid;
+  place-items: center;
+  width: calc(var(--gp) * 15);
+  height: calc(var(--gp) * 15);
+  flex-shrink: 0;
+  color: #f3f0da;
+  border: var(--gp) solid #233a33;
+  font-size: calc(var(--gp) * 9);
+}
+.office-request-name {
+  margin-top: var(--gp);
+  font-size: calc(var(--gp) * 17);
+  line-height: calc(var(--gp) * 19);
+  color: #1f332d;
+}
+.office-cost {
+  padding: calc(var(--gp) * 2) 0;
+  border-top: calc(var(--gp) * 2) solid var(--rule);
+  border-bottom: calc(var(--gp) * 2) solid var(--rule);
+}
+.office-cost b {
+  font-size: calc(var(--gp) * 9);
+}
+.office-justification {
+  background: var(--paper);
+  border-left: calc(var(--gp) * 2) solid var(--ochre);
+  padding: calc(var(--gp) * 4) calc(var(--gp) * 5);
+  color: var(--ink);
+  font-size: calc(var(--gp) * 10);
+  line-height: calc(var(--gp) * 13);
+}
+/* A rubber stamp, slightly crooked. */
+.office-pending {
+  color: #7a6230;
+  border: calc(var(--gp) * 2) solid #9a7f3e;
+  padding: 0 calc(var(--gp) * 2);
+  text-transform: uppercase;
+  letter-spacing: calc(var(--gp) * 0.4);
+  font-size: calc(var(--gp) * 6);
+}
+.office-actions {
+  background: var(--paper-lo);
+  border-top: var(--gp) solid var(--rule);
+}
+
+.office-taskbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  height: calc(var(--gp) * 14);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gp) * 3);
+  padding: 0 calc(var(--gp) * 2);
+  background: #c0c8b6;
+  border-top: var(--gp) solid #e3e6d6;
+  box-shadow: 0 calc(var(--gp) * -1) 0 #2f4740;
+  color: var(--ink);
+}
+.office-start {
+  padding: 0 calc(var(--gp) * 2);
+  color: var(--ink-soft);
+  font-weight: 600;
+  line-height: calc(var(--gp) * 9);
+}
+.office-taskbar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--gp) * 2);
+  padding: 0 calc(var(--gp) * 3);
+  line-height: calc(var(--gp) * 9);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.office-taskbar-button:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.office-taskbar-button svg {
+  width: calc(var(--gp) * 6);
+  height: calc(var(--gp) * 6);
+}
+
+/* What approving would do to the budget, in the accent colour. */
+.office-projection {
+  color: #7a6230;
+}

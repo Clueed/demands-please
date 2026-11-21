@@ -17,6 +17,7 @@ const catalog = [app("pipetrack", 600), app("other", 400)];
 
 const withMatch: Demand = {
   id: "a",
+  requester: { name: "R", role: "Role" },
   requestedApp: "X",
   reason: "r",
   capabilityId: "hr",
@@ -25,6 +26,7 @@ const withMatch: Demand = {
 };
 const noMatch: Demand = {
   id: "b",
+  requester: { name: "R", role: "Role" },
   requestedApp: "Y",
   reason: "r",
   capabilityId: "hr",

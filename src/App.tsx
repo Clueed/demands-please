@@ -27,7 +27,12 @@ export function App() {
   return (
     <Stage>
       <Room
-        visitor={<Visitor demand={currentDemand(game)} />}
+        visitor={
+          <Visitor
+            demand={currentDemand(game)}
+            ticket={`DM-${String(game.log.length + 1).padStart(3, "0")}`}
+          />
+        }
         screen={
           <Screen
             key={round}

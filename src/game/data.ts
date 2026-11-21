@@ -113,6 +113,7 @@ export const CATALOG: CatalogApp[] = [
 export const DEMANDS: Demand[] = [
   {
     id: "d1",
+    requester: { name: "Stefan Kühn", role: "Marketing Lead" },
     capabilityId: "sales-marketing",
     requestedApp: "MailBlast Pro",
     reason: "We want to send a monthly newsletter to all our customers.",
@@ -121,6 +122,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d2",
+    requester: { name: "Tomasz Nowak", role: "Finance Controller" },
     capabilityId: "finance",
     requestedApp: "ExpenseSnap",
     reason: "Our field staff need to hand in receipts from their phones.",
@@ -129,6 +131,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d3",
+    requester: { name: "Lena Brandt", role: "Design Engineer" },
     capabilityId: "manufacturing",
     requestedApp: "3D Print Studio",
     reason: "Engineering wants to design and print prototype parts in-house.",
@@ -137,6 +140,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d4",
+    requester: { name: "Marco Rossi", role: "Sales Manager" },
     capabilityId: "sales-marketing",
     requestedApp: "LeadMagnet CRM",
     reason: "Sales reps keep losing track of which customers they already called.",
@@ -145,6 +149,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d5",
+    requester: { name: "Aylin Demir", role: "HR Business Partner" },
     capabilityId: "hr",
     requestedApp: "RecruitRocket",
     reason: "We have 15 open positions and track applicants in spreadsheets.",
@@ -153,6 +158,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d6",
+    requester: { name: "Jens Vogel", role: "Maintenance Lead" },
     capabilityId: "manufacturing",
     requestedApp: "StockSense",
     reason: "Maintenance can't find spare parts and keeps reordering them.",
@@ -161,6 +167,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d7",
+    requester: { name: "Clara Wendt", role: "Procurement Analyst" },
     capabilityId: "finance",
     requestedApp: "ContractAI",
     reason: "Legal wants supplier contracts reviewed automatically.",
@@ -169,6 +176,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d8",
+    requester: { name: "Felix Hahn", role: "Team Lead, Support" },
     capabilityId: "hr",
     requestedApp: "VacayPlanner",
     reason: "Team leads want to see who is on holiday next month.",
@@ -177,6 +185,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d9",
+    requester: { name: "Petra Lange", role: "Quality Manager" },
     capabilityId: "manufacturing",
     requestedApp: "DefectLens",
     reason: "The quality team still writes inspection results on paper.",
@@ -185,6 +194,7 @@ export const DEMANDS: Demand[] = [
   },
   {
     id: "d10",
+    requester: { name: "Noah Becker", role: "Social Media Manager" },
     capabilityId: "sales-marketing",
     requestedApp: "Instaplanner",
     reason: "Marketing wants to plan our Instagram and LinkedIn posts ahead.",

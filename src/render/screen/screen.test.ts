@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { REGIONS } from "../layout";
 
-import { clampPointer, initialScreen, MIN_VISIBLE, screenReducer } from "./screen";
+import { CALENDAR_HANG, clampPointer, initialScreen, MIN_VISIBLE, screenReducer } from "./screen";
 
 describe("clampPointer", () => {
   const { x, y, w, h } = REGIONS.screen;
@@ -18,8 +18,11 @@ describe("clampPointer", () => {
 });
 
 describe("screenReducer", () => {
-  it("starts with every window fully on the screen", () => {
-    for (const w of Object.values(initialScreen().windows)) {
+  it("starts with every window on the screen, the calendar hanging off the left edge", () => {
+    const { calendar, ...rest } = initialScreen().windows;
+    expect(calendar.x).toBe(-CALENDAR_HANG);
+    expect(calendar.x + calendar.w).toBeGreaterThan(MIN_VISIBLE);
+    for (const w of Object.values(rest)) {
       expect(w.x).toBeGreaterThanOrEqual(0);
       expect(w.y).toBeGreaterThanOrEqual(0);
       expect(w.x + w.w).toBeLessThanOrEqual(REGIONS.screen.w);

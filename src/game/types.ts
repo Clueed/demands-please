@@ -18,6 +18,8 @@ export type CatalogApp = {
 /** A request handed over the desk: "please buy us X, because Y". */
 export type Demand = {
   id: string;
+  /** Who brings the request to the desk. */
+  requester: { name: string; role: string };
   requestedApp: string;
   reason: string;
   /** Catalog page the app joins if bought. */

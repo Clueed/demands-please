@@ -17,13 +17,25 @@ export type ScreenState = {
 
 export const initialScreen = (): ScreenState => ({
   windows: {
-    calendar: { x: 4, y: 4, w: 120, h: 260 },
-    binder: { x: 128, y: 4, w: 176, h: 260 },
-    gauges: { x: 308, y: 4, w: 154, h: 46 },
-    form: { x: 308, y: 54, w: 154, h: 210 },
+    // The calendar hangs off the left edge; its text is right-aligned so the visible part reads.
+    calendar: { x: -CALENDAR_HANG, y: 4, w: 100 + CALENDAR_HANG, h: DESK_H - 16 - OVERVIEW_H },
+    gauges: { x: 4, y: DESK_H - 4 - OVERVIEW_H, w: 96, h: OVERVIEW_H },
+    // Sized to its content, so the decision sits right under the reason.
+    form: { x: 104, y: 4, w: 168, h: 204 },
+    // The directory is where most of the game happens, so it gets the full-height column.
+    binder: { x: 276, y: 4, w: REGIONS.screen.w - 280, h: DESK_H - 8 },
   },
   order: ["calendar", "binder", "gauges", "form"],
 });
+
+/** How far the calendar starts out hanging off the left edge of the screen. */
+export const CALENDAR_HANG = 24;
+/** Height of the taskbar along the bottom of the screen, in game pixels. */
+export const TASKBAR_H = 14;
+/** The overview only needs room for two figures. */
+const OVERVIEW_H = 66;
+/** The desktop area above the taskbar, where windows start out. */
+const DESK_H = REGIONS.screen.h - TASKBAR_H;
 
 export type ScreenAction =
   | { type: "move"; id: WindowId; x: number; y: number }

@@ -7,12 +7,12 @@ export type Rect = { x: number; y: number; w: number; h: number };
 export type Points = readonly (readonly [x: number, y: number])[];
 
 /**
- * The monitor peeks in from the left: its left edge is out of view and there is a gap above it.
- * Only the part of the screen that is in view counts as the screen.
+ * The monitor is the game's main interface, so it is as large as the frame allows: whole,
+ * on the left of the desk, leaving just enough room on the right for the visitor.
  */
-const MONITOR = { x: -56, y: 20, w: 528, h: 290 };
+const MONITOR = { x: 8, y: 8, w: 468, h: 286 };
 const BEZEL = 6;
-const CHIN = 16;
+const CHIN = 12;
 const MONITOR_RIGHT = MONITOR.x + MONITOR.w;
 const MONITOR_BOTTOM = MONITOR.y + MONITOR.h;
 const MONITOR_CENTRE = MONITOR.x + MONITOR.w / 2;
@@ -20,8 +20,10 @@ const MONITOR_CENTRE = MONITOR.x + MONITOR.w / 2;
 const MONITOR_DEPTH = 6;
 /** The x where the monitor's right side ends; the room right of it is free. */
 const MONITOR_SIDE_RIGHT = MONITOR_RIGHT + MONITOR_DEPTH;
+/** How far the monitor, being nearer, covers the visitor's chair and shoulder. */
+const VISITOR_TUCK = 6;
 /** Where the far edge of the desk meets the room. Everything behind the desk ends here. */
-const DESK_BACK = 314;
+const DESK_BACK = 300;
 const VISITOR_WIDTH = 148;
 
 /**
@@ -33,13 +35,13 @@ export const REGIONS = {
   monitor: MONITOR,
   /** The part of the screen in view, inside the bezel. All the windows live here. */
   screen: {
-    x: 0,
+    x: MONITOR.x + BEZEL,
     y: MONITOR.y + BEZEL,
-    w: MONITOR_RIGHT - BEZEL,
+    w: MONITOR.w - 2 * BEZEL,
     h: MONITOR.h - BEZEL - CHIN,
   },
-  /** The neck of the monitor stand, between the monitor and its foot. */
-  standNeck: { x: MONITOR_CENTRE - 12, y: MONITOR_BOTTOM, w: 24, h: 10 },
+  /** The neck of the monitor stand, between the monitor and its foot on the desk. */
+  standNeck: { x: MONITOR_CENTRE - 28, y: MONITOR_BOTTOM, w: 56, h: 16 },
 } as const satisfies Record<string, Rect>;
 
 /** Faces drawn in perspective, seen from right at the desk. */
@@ -53,10 +55,10 @@ export const FACES = {
   ],
   /** The foot of the monitor stand, lying on the desk. */
   standFoot: [
-    [MONITOR_CENTRE - 28, MONITOR_BOTTOM + 8],
-    [MONITOR_CENTRE + 28, MONITOR_BOTTOM + 8],
-    [MONITOR_CENTRE + 40, MONITOR_BOTTOM + 20],
-    [MONITOR_CENTRE - 40, MONITOR_BOTTOM + 20],
+    [MONITOR_CENTRE - 50, MONITOR_BOTTOM + 14],
+    [MONITOR_CENTRE + 50, MONITOR_BOTTOM + 14],
+    [MONITOR_CENTRE + 60, MONITOR_BOTTOM + 24],
+    [MONITOR_CENTRE - 60, MONITOR_BOTTOM + 24],
   ],
 } as const satisfies Record<string, Points>;
 
@@ -84,9 +86,12 @@ export function roomLayout({ width, height }: Size): {
   return {
     /** The back wall, filling the whole game window. */
     wall: { x: 0, y: 0, w: width, h: height },
-    /** The person sitting across the desk, centred in the room right of the monitor. */
+    /**
+     * The person sitting across the desk, right of the monitor and partly behind it: the
+     * monitor is nearer, so it covers the edge of the chair and shoulder.
+     */
     visitor: {
-      x: MONITOR_SIDE_RIGHT + Math.round((width - MONITOR_SIDE_RIGHT - VISITOR_WIDTH) / 2),
+      x: MONITOR_SIDE_RIGHT - VISITOR_TUCK,
       y: 0,
       w: VISITOR_WIDTH,
       h: DESK_BACK,
@@ -96,10 +101,10 @@ export function roomLayout({ width, height }: Size): {
      * game window, so the desk runs out of view; a taller window shows more of it.
      */
     deskTop: [
-      [12, DESK_BACK],
-      [width - 12, DESK_BACK],
-      [width + 60, height],
-      [-60, height],
+      [4, DESK_BACK],
+      [width - 4, DESK_BACK],
+      [width + 90, height + 40],
+      [-90, height + 40],
     ],
   };
 }
