@@ -38,17 +38,19 @@ const query = new URLSearchParams(window.location.search);
 
 /**
  * Debug mode. `?day=4&ticket=2&findings=1` (see `SeedOptions`) seeds a run at that point;
- * `?debug` alone carries on with the last debug run. Debug runs save to their own slot, so
+ * `?debug` alone carries on with the last debug run. Add `&freeze` to stop the game clock. Debug runs save to their own slot, so
  * the real run is left alone, and `window.demands` drives them from the console.
  */
 const seedOptions = parseSeed(query);
 const debug = seedOptions !== null || query.has("debug");
+/** `?freeze` (debug only) stops the game clock, to look at a moment for as long as you like. */
+const frozen = debug && query.has("freeze");
 const slot: Slot = debug ? "debug" : "run";
 
 if (seedOptions) {
   // Down to `?debug`, so a reload carries on with the seeded run rather than seeding again.
   const url = new URL(window.location.href);
-  url.search = "?debug";
+  url.search = frozen ? "?debug&freeze" : "?debug";
   window.history.replaceState(null, "", url);
 }
 
@@ -180,7 +182,7 @@ export function App() {
   const [paused, setPaused] = useState(false);
   const togglePause = () => setPaused((p) => !p);
 
-  useGameClock(game.phase === "working" && !paused, dispatch);
+  useGameClock(game.phase === "working" && !paused && !frozen, dispatch);
   useSaveRun(game);
   useDebugConsole(game, dispatch);
 
@@ -210,6 +212,7 @@ export function App() {
       {debug && (
         <div className="pointer-events-none fixed top-0 left-0 z-50 bg-red-600 px-1.5 py-0.5 font-mono text-xs text-white">
           DEBUG · day {game.day} · {game.phase}
+          {frozen && " · frozen"}
         </div>
       )}
     </>
