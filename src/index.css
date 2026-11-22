@@ -519,6 +519,8 @@
   padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
   background: var(--paper);
   border: var(--gp) solid #c4c8b4;
+  /* The department's colour, as on the Org and Strategy tabs. */
+  border-left-width: calc(var(--gp) * 3);
 }
 .office-desc {
   margin-top: var(--gp);
@@ -526,30 +528,61 @@
 }
 /* Offering decides the request, so it's a button like Approve and Decline, only smaller. */
 .office-offer {
-  padding: 0 calc(var(--gp) * 3);
+  padding: var(--gp) calc(var(--gp) * 3);
   font-size: calc(var(--gp) * 6);
+  font-weight: 600;
+  color: var(--green-dk);
 }
-/* Department headings stay in view while their apps scroll by. */
+.office-offer:hover:enabled {
+  background: #eeeddf;
+  border-color: var(--green-dk);
+}
+.office-offer:disabled {
+  opacity: 0.45;
+}
+.office-app-card .office-app-icon {
+  width: calc(var(--gp) * 10);
+  height: calc(var(--gp) * 10);
+}
+/* Above the scrolling list: jump to a department, and what offering does. */
+.office-catalog-bar {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gp) * 2);
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
+  background: var(--paper-hi);
+  border-bottom: var(--gp) solid var(--rule);
+}
+.office-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--gp) * 2);
+  padding: 0 calc(var(--gp) * 2) 0 0;
+  border: var(--gp) solid #c4c8b4;
+  background: var(--paper);
+  font-size: calc(var(--gp) * 6);
+  line-height: calc(var(--gp) * 8);
+  cursor: pointer;
+}
+.office-jump:hover {
+  border-color: var(--frame);
+}
+.office-jump .office-swatch {
+  width: calc(var(--gp) * 3);
+}
+/* Department headings: a band that stays in view while its apps scroll under it. */
 .office-catalog-heading {
   position: sticky;
   top: 0;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: calc(var(--gp) * 2);
-  padding: calc(var(--gp) * 1) 0;
-  background: var(--paper-hi);
-  border-bottom: var(--gp) solid var(--rule);
-  font-family: var(--pixel-caps);
-  font-size: calc(var(--gp) * 6.5);
-  line-height: calc(var(--gp) * 8);
+  padding: var(--gp) calc(var(--gp) * 3);
+  background: var(--paper-lo);
+  border-bottom: calc(var(--gp) * 2) solid var(--rule);
+  box-shadow: 0 var(--gp) 0 #0000001a;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: calc(var(--gp) * 0.5);
   color: var(--ink);
-}
-.office-catalog-heading .office-swatch {
-  height: calc(var(--gp) * 6);
-  align-self: center;
 }
 
 /* The ticket: a service desk record. */

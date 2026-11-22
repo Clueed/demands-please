@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { CAPABILITIES, capabilityName, DEPARTMENT_HEADS, STRATEGY, TECH_RADAR } from "@/game/data";
 import { activeCatalog, rulesInForce } from "@/game/rules";
@@ -34,6 +34,13 @@ export function Rulebook({
 }) {
   const [tab, setTab] = useState<TabId>("rules");
   const rules = rulesInForce(day);
+  const scroller = useRef<HTMLDivElement>(null);
+  /** Scrolls the catalog to a department's heading. Not `scrollIntoView`: that moves the stage too. */
+  const jumpTo = (capabilityId: string) => {
+    const box = scroller.current;
+    const section = box?.querySelector<HTMLElement>(`[data-department="${capabilityId}"]`);
+    if (box && section) box.scrollTop = section.offsetTop - box.offsetTop;
+  };
 
   return (
     <>
@@ -50,7 +57,27 @@ export function Rulebook({
           </button>
         ))}
       </div>
-      <div className="office-scroll office-rulebook min-h-0 flex-1 overflow-y-auto p-3">
+      {tab === "catalog" && (
+        <div className="office-catalog-bar">
+          <div className="flex flex-wrap gap-1" aria-label="Jump to a department">
+            {CAPABILITIES.map((c) => (
+              <button key={c.id} className="office-jump" onClick={() => jumpTo(c.id)}>
+                <span className="office-swatch" style={{ background: departmentColor(c.id) }} />
+                {c.name}
+              </button>
+            ))}
+          </div>
+          <p className="office-muted">
+            {canOffer
+              ? "Offer instead decides the request, like Approve or Decline."
+              : "No request in review. Offers open again with the next one."}
+          </p>
+        </div>
+      )}
+      <div
+        ref={scroller}
+        className="office-scroll office-rulebook relative min-h-0 flex-1 overflow-y-auto p-3"
+      >
         {tab === "rules" && (
           <ol className="flex flex-col gap-2">
             {rules.map((r) => (
@@ -102,45 +129,37 @@ export function Rulebook({
           </>
         )}
 
-        {tab === "catalog" && (
-          <>
-            <p className="office-muted mb-2">
-              {canOffer
-                ? "Offering an app decides the request, like Approve or Decline."
-                : "Apps can be offered while a request is in review."}
-            </p>
-            {CAPABILITIES.map((c) => (
-              <section key={c.id} className="mb-3">
-                <h3 className="office-catalog-heading">
-                  <span className="office-swatch" style={{ background: departmentColor(c.id) }} />
-                  {c.name}
-                </h3>
-                <ul>
-                  {activeCatalog(retired)
-                    .filter((a) => a.capabilityId === c.id)
-                    .map((app) => (
-                      <li key={app.id} className="office-app-card">
-                        <div className="flex items-center gap-2">
-                          <AppIcon name={app.name} />
-                          <b className="flex-1">{app.name}</b>
-                          {canOffer && (
-                            <button
-                              className="office-control office-offer"
-                              aria-label={`Offer ${app.name} instead`}
-                              onClick={() => onOffer(app.id)}
-                            >
-                              Offer
-                            </button>
-                          )}
-                        </div>
-                        <p className="office-desc">{app.description}</p>
-                      </li>
-                    ))}
-                </ul>
-              </section>
-            ))}
-          </>
-        )}
+        {tab === "catalog" &&
+          CAPABILITIES.map((c) => (
+            <section key={c.id} data-department={c.id} className="mb-3">
+              <h3 className="office-catalog-heading">{c.name}</h3>
+              <ul>
+                {activeCatalog(retired)
+                  .filter((a) => a.capabilityId === c.id)
+                  .map((app) => (
+                    <li
+                      key={app.id}
+                      className="office-app-card"
+                      style={{ borderLeftColor: departmentColor(c.id) }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <AppIcon name={app.name} />
+                        <b className="flex-1">{app.name}</b>
+                        <button
+                          className="office-control office-offer"
+                          aria-label={`Offer ${app.name} instead`}
+                          disabled={!canOffer}
+                          onClick={() => onOffer(app.id)}
+                        >
+                          Offer instead
+                        </button>
+                      </div>
+                      <p className="office-desc">{app.description}</p>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ))}
 
         {tab === "radar" && (
           <>
