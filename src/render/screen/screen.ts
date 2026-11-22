@@ -75,7 +75,7 @@ export type ScreenAction =
   /** Put away every attachment and reset where they open, e.g. when the next ticket comes in. */
   | { type: "closeAttachments" };
 
-/** How much of a window (game pixels) always stays on screen past the left edge, to grab it back. */
+/** How much of a window (game pixels) always stays on screen past the left or right edge, to grab it back. */
 export const MIN_VISIBLE = 16;
 /** Height of a window's title bar, border included. It never leaves the desktop. */
 export const TITLE_H = 15;
@@ -88,15 +88,15 @@ const ATTACHMENT_WINDOWS: WindowId[] = [
 ];
 
 /**
- * Let a window hang off the left and bottom of the screen, snapped to whole game pixels.
- * Its title bar always stays on the desktop and its right end (with the close button) on
- * screen, so it can always be grabbed and closed.
+ * Let a window hang off the left, right and bottom of the screen, snapped to whole game pixels.
+ * Its title bar always stays on the desktop and at least `MIN_VISIBLE` of it on screen,
+ * so it can always be grabbed back.
  */
 function clampToScreen(win: Rect, x: number, y: number): Rect {
   const { w } = REGIONS.screen;
   return {
     ...win,
-    x: clamp(Math.round(x), MIN_VISIBLE - win.w, w - win.w),
+    x: clamp(Math.round(x), MIN_VISIBLE - win.w, w - MIN_VISIBLE),
     y: clamp(Math.round(y), 0, DESK_H - TITLE_H),
   };
 }

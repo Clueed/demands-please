@@ -38,7 +38,7 @@ describe("screenReducer", () => {
     expect(initialScreen().order).toEqual(["catalog", "org", "mail", "intranet", "ticket"]);
   });
 
-  it("moves a window, letting it hang off the left and bottom", () => {
+  it("moves a window, letting it hang off the left, right and bottom", () => {
     const screen = initialScreen();
 
     const moved = screenReducer(screen, { type: "move", id: "ticket", x: 10, y: 20 });
@@ -48,13 +48,13 @@ describe("screenReducer", () => {
     expect(hanging.windows.ticket).toMatchObject({ x: -40, y: 200 });
   });
 
-  it("keeps the title bar and close button on screen", () => {
+  it("keeps the title bar and a grabbable strip on screen", () => {
     const screen = initialScreen();
     const doc = screen.windows.vendorSheet;
 
     const farAway = screenReducer(screen, { type: "move", id: "vendorSheet", x: 9999, y: 9999 });
     expect(farAway.windows.vendorSheet).toMatchObject({
-      x: REGIONS.screen.w - doc.w,
+      x: REGIONS.screen.w - MIN_VISIBLE,
       y: REGIONS.screen.h - TASKBAR_H - TITLE_H,
     });
 
