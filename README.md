@@ -1,60 +1,69 @@
-# Demands, Please
+<div align="center">
 
-A simple single-player, client-side web game (later with a global leaderboard hosted on Cloudflare).
+<a href="https://demands-pls.demands-pls.workers.dev"><img src="public/og-image.png" alt="Demands, Please: a pixel-art game about the IT demand desk" width="100%"></a>
 
-## Stack
+### Everyone wants just one more tool. You decide who gets it.
 
-- **Vite 8** + **React 19** (React Compiler via `@rolldown/plugin-babel`) + **TypeScript**
-- **Tailwind CSS v4** (via `@tailwindcss/vite`)
-- **shadcn/ui** (Base UI primitives, `nova` style, lucide icons)
-- **Oxlint** (type-aware via `oxlint-tsgolint`) + **Oxfmt**
-- **Vitest**
-- **pnpm**
-- **Cloudflare Workers** (static assets, SPA fallback) via `@cloudflare/vite-plugin` + Wrangler
+**[▶ Play free in your browser](https://demands-pls.demands-pls.workers.dev)**
 
-## Scripts
+No download, no sign-up. A run takes about half an hour.
 
-| Command           | What it does                             |
-| ----------------- | ---------------------------------------- |
-| `pnpm dev`        | Start the dev server                     |
-| `pnpm build`      | Typecheck and build to `dist/`           |
-| `pnpm preview`    | Serve the production build               |
-| `pnpm check`      | Format check, lint, typecheck, run tests |
-| `pnpm lint[:fix]` | Lint with Oxlint                         |
-| `pnpm format`     | Format with Oxfmt                        |
-| `pnpm test`       | Vitest in watch mode                     |
-| `pnpm icons`      | Regenerate app icons into `public/`      |
+</div>
 
-Add UI components with `pnpm dlx shadcn@latest add <component>`.
+<br>
 
-## Deploying
+<p align="center">
+  <img src=".github/readme/gameplay.gif" alt="A visitor brings a ticket, the security certificate has expired, the request gets declined, and the next visitor sits down" width="100%">
+</p>
 
-The app deploys as an assets-only Cloudflare Worker (`wrangler.jsonc`); unknown paths fall back to `index.html`.
-Run `pnpm exec wrangler login` once, then `pnpm deploy`.
+<br>
 
-Canonical links, social cards, `robots.txt` and `sitemap.xml` use the production URL. Set `SITE_URL` when building (e.g. `SITE_URL=https://example.com pnpm deploy`); the default is in `vite.config.ts`. The social card image is `public/og-image.png`, a 1200×630 screenshot of the title screen (`src/render/TitleScreen.tsx`); retake it after changing that screen.
+Ten working days at the company's IT demand desk. Colleagues line up all day, each with a ticket for the software they _really_ need. Check the paperwork, approve or decline, and get through the queue by five. Anyone you don't see by closing time buys their own tool, and that's shadow IT.
 
-## App icons
+Every morning IT governance sends a new rule, and the old rules still apply.
 
-The icon is pixel art in `scripts/icons/art.ts`. Edit the grid or palette, then run `pnpm icons` to rewrite the favicons (SVG, ICO), the Apple touch icon, the PWA icons (including a maskable one) and `manifest.webmanifest` in `public/`. The generator has no dependencies.
+<br>
 
-## Debugging: seed a run
+<table>
+  <tr>
+    <td width="50%"><img src=".github/readme/first-visitor.png" alt="Day one: a payroll specialist asks for a €7,000 HR tool"></td>
+    <td width="50%"><img src=".github/readme/paperwork.png" alt="Day seven: a business case, a vendor fact sheet and a rulebook of seven memos"></td>
+  </tr>
+  <tr>
+    <td><b>"Only €7,000 a year!"</b><br>Everyone has a reason. Check who signed off and whether the boss actually runs their department.</td>
+    <td><b>Read the fine print.</b><br>Business cases, vendor fact sheets, security certificates, the org chart, the service catalog. Somewhere in there is the reason to say no. Or there isn't.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src=".github/readme/coffee.png" alt="A coffee invitation from the internal auditor"></td>
+    <td width="50%"><img src=".github/readme/audit.png" alt="Three audit findings: the CIO pauses the demand process"></td>
+  </tr>
+  <tr>
+    <td><b>Coffee with the auditor.</b><br>Wrong calls become audit findings. Clear the queue early and a coffee might make one go away.</td>
+    <td><b>Three strikes.</b><br>Three open findings and the CIO pauses the whole process. From then on, the steering committee signs off every request itself.</td>
+  </tr>
+</table>
 
-Add seed options to the URL to start a run part-way through, e.g. `/?day=4&ticket=2&findings=1`:
+<br>
 
-| Option     | What it does                                                                          |
-| ---------- | ------------------------------------------------------------------------------------- |
-| `seed`     | The run's random seed, so the same tickets come up again (random if left out)         |
-| `day`      | The day to land on, 1–10 (at its briefing unless another phase is given)              |
-| `ticket`   | Visitors already seen today; lands mid-day, with the clock moved on                   |
-| `findings` | Open audit findings (0–2), from wrong calls on the tickets just before the stop       |
-| `phase`    | `briefing`, `working`, `coffee` (with the auditor), `dayEnd`, `lost` (audit) or `won` |
-| `clock`    | Game time while working, e.g. `15:30`                                                 |
+<p align="center">
+  <img src=".github/readme/run-complete.png" alt="Run complete: 70 requests decided, 97% right calls" width="80%">
+</p>
 
-Earlier tickets are decided by the engine itself, so the log, clock and run report look like real play. The URL then drops to `?debug`, so a reload carries on where you left off. Debug runs save to their own slot and leave the real run alone; open the plain URL to get back to it.
+<p align="center">
+  <b>Make it to Friday of week two</b> with the queue cleared and the auditor happy.<br>
+  Then try again: every run brings new visitors, new apps and new excuses.
+</p>
 
-In debug mode, `window.demands` drives the run from the browser console:
+<br>
 
-- `demands.state()`: the run as it stands
-- `demands.answer()`: the right call on the ticket at the desk, with the reasons to decline
-- `demands.seed({ day: 9, phase: "dayEnd" })`: replace the run with a seeded one
+<div align="center">
+
+### [▶ Start your shift](https://demands-pls.demands-pls.workers.dev)
+
+<sub>Best on a laptop or desktop screen. Your run is saved in the browser, so you can close the tab and carry on later.</sub>
+
+<br><br>
+
+<sub>Want to build or tinker? See <a href="DEVELOPMENT.md">DEVELOPMENT.md</a>.</sub>
+
+</div>
