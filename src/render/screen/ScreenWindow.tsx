@@ -1,21 +1,14 @@
-import { BookOpen, FileBadge, FileCheck, FileSpreadsheet, FileText, Ticket, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useRef, type Dispatch, type PointerEvent, type ReactNode } from "react";
 
 import { rectStyle } from "../layout";
 import { toGamePx } from "../stage";
 import { useFit } from "../stageFitContext";
+import { WINDOW_ICONS } from "./windows";
 import { clampPointer, type ScreenAction, type ScreenState, type WindowId } from "./screen";
 
 /** How far (game pixels) the pointer must move before a press becomes a drag. */
 const DRAG_THRESHOLD = 3;
-const WINDOW_ICONS = {
-  ticket: Ticket,
-  rulebook: BookOpen,
-  businessCase: FileText,
-  vendorSheet: FileSpreadsheet,
-  certificate: FileBadge,
-  worksCouncil: FileCheck,
-};
 
 /**
  * A window on the monitor: press to bring to the front, drag to move.

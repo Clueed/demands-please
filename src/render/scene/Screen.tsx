@@ -10,11 +10,15 @@ import { ConfirmRestart, DayOverlay } from "../screen/DayOverlay";
 import { LockScreen } from "../screen/LockScreen";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
-import { Rulebook } from "../screen/Rulebook";
+import { Intranet } from "../screen/Intranet";
+import { Mail } from "../screen/Mail";
+import { OrgChart } from "../screen/OrgChart";
 import { initialScreen, screenReducer } from "../screen/screen";
+import { ServiceCatalog } from "../screen/ServiceCatalog";
 import { ScreenWindow } from "../screen/ScreenWindow";
 import { Ticket } from "../screen/Ticket";
 import { Taskbar } from "../screen/Taskbar";
+import { APPS, WINDOW_ICONS } from "../screen/windows";
 
 export type ScreenHandlers = {
   onDecide: (decision: Decision) => void;
@@ -26,7 +30,7 @@ export type ScreenHandlers = {
   onPause: () => void;
 };
 
-/** The service desk workstation: ticket, rulebook and any files opened. */
+/** The service desk workstation: the ticket, the other desktop apps, and any files opened. */
 export function Screen({
   state,
   paused,
@@ -41,14 +45,25 @@ export function Screen({
     files.some((f) => f.kind === id),
   );
 
+  /** The ticket's files opened at least once, so the file list can tick them off. */
+  const [viewed, setViewed] = useState<AttachmentKind[]>([]);
+  const openFile = (id: AttachmentKind) => {
+    setViewed((v) => (v.includes(id) ? v : [...v, id]));
+    dispatch({ type: "raise", id });
+  };
+
   // A new ticket comes with its own files; put the last one's away.
   const [filesFor, setFilesFor] = useState(demand?.id);
   if (filesFor !== demand?.id) {
     setFilesFor(demand?.id);
+    setViewed([]);
     dispatch({ type: "closeAttachments" });
   }
 
   const [confirmingRestart, setConfirmingRestart] = useState(false);
+  const apps = APPS.filter((a) => a.from <= state.day);
+  const has = (id: string) => apps.some((a) => a.id === id);
+  const top = screen.order.findLast((id) => has(id) || files.some((f) => f.kind === id));
 
   // Escape backs out of a restart, or puts away the file on top, like closing its window.
   useEffect(() => {
@@ -69,14 +84,26 @@ export function Screen({
 
   return (
     <div className="office-desktop absolute inset-0">
-      <ScreenWindow id="rulebook" label="Rulebook" {...win}>
-        <Rulebook
-          day={state.day}
-          retired={state.retired}
-          canOffer={!!demand && !resolution && isInForce("reuse", state.day)}
-          onOffer={(appId) => on.onDecide({ kind: "offer", appId })}
-        />
+      {has("catalog") && (
+        <ScreenWindow id="catalog" label="Service catalog" {...win}>
+          <ServiceCatalog
+            retired={state.retired}
+            canOffer={!!demand && !resolution && isInForce("reuse", state.day)}
+            onOffer={(appId) => on.onDecide({ kind: "offer", appId })}
+          />
+        </ScreenWindow>
+      )}
+      <ScreenWindow id="mail" label="Mail" {...win}>
+        <Mail day={state.day} />
       </ScreenWindow>
+      <ScreenWindow id="org" label="Org chart" {...win}>
+        <OrgChart />
+      </ScreenWindow>
+      {has("intranet") && (
+        <ScreenWindow id="intranet" label="Intranet" {...win}>
+          <Intranet />
+        </ScreenWindow>
+      )}
 
       <ScreenWindow id="ticket" label="Service desk" {...win}>
         {demand ? (
@@ -84,8 +111,8 @@ export function Screen({
             demand={demand}
             day={state.day}
             resolution={resolution}
-            opened={opened}
-            onOpen={(id) => dispatch({ type: "raise", id })}
+            viewed={viewed}
+            onOpen={openFile}
             onApprove={() => on.onDecide({ kind: "approve" })}
             onDecline={() => on.onDecide({ kind: "decline" })}
             onNext={on.onNext}
@@ -115,6 +142,26 @@ export function Screen({
       <Taskbar
         minutes={state.clock}
         date={formatDay(dayDate(state.day))}
+        tasks={[
+          ...apps.map(({ id, label }) => ({ id, label, doc: false })),
+          // Open documents too, as just an icon, so one buried under an app can be found again.
+          ...opened.map((id) => ({ id, label: DOCUMENT_TITLES[id], doc: true })),
+        ].map(({ id, label, doc }) => {
+          const Icon = WINDOW_ICONS[id];
+          return (
+            <button
+              key={id}
+              className={cn("office-task", doc && "is-doc")}
+              aria-label={label}
+              aria-pressed={top === id}
+              title={label}
+              onClick={() => dispatch({ type: "raise", id })}
+            >
+              <Icon aria-hidden="true" />
+              {!doc && <span>{label}</span>}
+            </button>
+          );
+        })}
         onRestart={() => setConfirmingRestart(true)}
         onPause={on.onPause}
       >

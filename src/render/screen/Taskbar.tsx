@@ -14,10 +14,13 @@ const ORB_SHINE = "M2 2h2v1H3v1H2Z";
 export function Taskbar({
   minutes,
   date,
+  tasks,
   onRestart,
   onPause,
   children,
 }: {
+  /** One button per app: the one in front is pressed, and pressing another brings it forward. */
+  tasks: ReactNode;
   minutes: number;
   /** Today's date, e.g. "Mon 2 Nov 2026". */
   date: string;
@@ -78,8 +81,9 @@ export function Taskbar({
           </div>
         </>
       )}
-      {children}
+      <span className="office-tasks">{tasks}</span>
       <span className="flex-1" />
+      {children}
       <span className="office-tray office-clock office-number">
         <span>{date}</span>
         <time>{clock(minutes)}</time>

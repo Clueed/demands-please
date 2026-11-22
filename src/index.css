@@ -411,11 +411,18 @@
     inset calc(var(--gp) * -2) calc(var(--gp) * -2) 0 var(--red-dk),
     inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #a8705f;
 }
+/* Hover lights the button up, bevel and all, so it's plain which one you're about to press. */
 .office-approve:hover:enabled {
-  background: #4a7262;
+  background: #5b8a75;
+  box-shadow:
+    inset calc(var(--gp) * -2) calc(var(--gp) * -2) 0 #2c4a3e,
+    inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #86a898;
 }
 .office-decline:hover:enabled {
-  background: #ab7262;
+  background: #9a6a5c;
+  box-shadow:
+    inset calc(var(--gp) * -2) calc(var(--gp) * -2) 0 var(--red-dk),
+    inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #c08a78;
 }
 
 .office-warning {
@@ -455,11 +462,11 @@
   border-bottom-color: var(--paper-hi);
   box-shadow: inset 0 calc(var(--gp) * 2) 0 var(--green);
 }
-.office-rulebook {
+.office-page {
   background: var(--paper-hi);
 }
-/* The binder runs long late in the run: show how far down you are. */
-.office-scroll.office-rulebook {
+/* Pages run long late in the run: show how far down you are. */
+.office-scroll.office-page {
   scrollbar-width: thin;
   scrollbar-color: var(--frame) var(--paper-lo);
 }
@@ -613,7 +620,7 @@
   align-items: baseline;
 }
 .office-fields .office-label {
-  font-size: calc(var(--gp) * 5);
+  color: var(--ink);
 }
 .office-empty {
   color: #8a3e2e;
@@ -641,9 +648,13 @@
   background: #eeeddf;
   border-color: var(--frame);
 }
-.office-file[data-open="true"] {
-  background: #bccfb3;
-  border-color: var(--green-dk);
+/* Already looked at: ticked off and a little faded, not highlighted like a selection. */
+.office-file[data-viewed="true"] {
+  color: var(--ink-soft);
+}
+.office-file[data-viewed="true"] svg:last-child {
+  color: var(--green-dk);
+  stroke-width: 3;
 }
 .office-file svg {
   width: calc(var(--gp) * 6);
@@ -777,6 +788,8 @@
 }
 
 .office-tray {
+  flex-shrink: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: calc(var(--gp) * 2);
@@ -1336,4 +1349,150 @@
 .fidget-dragging > .fidget {
   translate: 0 -2px;
   filter: brightness(1.05);
+}
+
+/* Taskbar buttons, one per app: the one in front looks pressed in. */
+.office-tasks {
+  display: flex;
+  gap: var(--gp);
+  min-width: 0;
+  padding: 0 calc(var(--gp) * 2);
+}
+.office-task {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--gp) * 2);
+  min-width: 0;
+  max-width: calc(var(--gp) * 64);
+  height: calc(var(--gp) * 10);
+  padding: 0 calc(var(--gp) * 3);
+  border: var(--gp) solid #2f4740;
+  background: var(--paper-hi);
+  box-shadow:
+    inset calc(var(--gp) * -1) calc(var(--gp) * -1) 0 #aab39c,
+    inset var(--gp) var(--gp) 0 #f1f0e2;
+  font-size: calc(var(--gp) * 6);
+  line-height: calc(var(--gp) * 8);
+  cursor: pointer;
+}
+/* An open document: just its icon, the title in the tooltip. */
+.office-task.is-doc {
+  flex-shrink: 0;
+  padding: 0 calc(var(--gp) * 2);
+}
+.office-task span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.office-task svg {
+  width: calc(var(--gp) * 6);
+  height: calc(var(--gp) * 6);
+  flex-shrink: 0;
+}
+.office-task:hover {
+  background: #eeeddf;
+}
+.office-task[aria-pressed="true"] {
+  background: #bccfb3;
+  box-shadow: inset var(--gp) var(--gp) 0 #0003;
+  font-weight: 600;
+}
+
+/* A list down the left of an app (the inbox, the people), the selection on the right. */
+.office-inbox {
+  width: 42%;
+  flex-shrink: 0;
+  background: var(--paper);
+  border-right: var(--gp) solid var(--rule);
+}
+.office-inbox-item {
+  display: block;
+  width: 100%;
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
+  border-bottom: var(--gp) solid #c4c8b4;
+  text-align: left;
+  cursor: pointer;
+}
+.office-inbox-item:hover {
+  background: #e6e5d3;
+}
+.office-inbox-item.is-new {
+  font-weight: 600;
+  box-shadow: inset calc(var(--gp) * 2) 0 0 var(--ochre);
+}
+.office-inbox-item[aria-current="true"] {
+  background: #bccfb3;
+  box-shadow: inset calc(var(--gp) * 3) 0 0 var(--green-dk);
+}
+/* Up to two lines, so the part that tells emails apart isn't cut off. */
+.office-inbox-subject {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.office-inbox-subject .office-rule-number {
+  min-width: calc(var(--gp) * 8);
+  height: calc(var(--gp) * 7);
+  font-size: calc(var(--gp) * 5);
+  vertical-align: calc(var(--gp) * 0.5);
+}
+/* Sits on the bottom edge of a scrolling page; at the end it only covers the bottom padding. */
+.office-fade {
+  position: sticky;
+  bottom: 0;
+  height: calc(var(--gp) * 8);
+  margin-top: calc(var(--gp) * -8);
+  background: linear-gradient(transparent, var(--paper-hi));
+  pointer-events: none;
+}
+/* The last department fills the view, so every department's heading can scroll to the top. */
+.office-catalog section:last-child {
+  min-height: 100%;
+}
+.office-mail {
+  background: var(--paper-hi);
+}
+.office-mail-header {
+  padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
+  background: var(--paper-lo);
+  border-bottom: var(--gp) solid var(--rule);
+}
+
+/* The org chart: the managing director, and the department heads hanging off her. */
+.office-org-box {
+  background: var(--paper-hi);
+}
+.office-org {
+  margin-left: calc(var(--gp) * 6);
+}
+.office-org li {
+  position: relative;
+  padding: calc(var(--gp) * 3) 0 0 calc(var(--gp) * 6);
+}
+/* The line down from the director, and the branch across to each head. */
+.office-org li::before,
+.office-org li::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  border-color: var(--frame);
+}
+.office-org li::before {
+  top: 0;
+  bottom: 0;
+  border-left: var(--gp) solid;
+}
+.office-org li:last-child::before {
+  bottom: calc(50% - var(--gp) * 1.5);
+}
+.office-org li::after {
+  top: calc(50% + var(--gp) * 1.5);
+  width: calc(var(--gp) * 6);
+  border-top: var(--gp) solid;
+}
+.office-approve:active:enabled,
+.office-decline:active:enabled {
+  box-shadow: inset var(--gp) var(--gp) 0 #0004;
 }

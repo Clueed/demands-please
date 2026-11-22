@@ -35,7 +35,7 @@ export function Document({ attachment: a, demand }: { attachment: Attachment; de
     return (
       <div className="office-doc">
         <p className="office-doc-head">{a.vendor}</p>
-        <p className="office-label mb-2">Product fact sheet</p>
+        <p className="office-label mb-2">Fact sheet</p>
         <dl className="office-fields">
           <Row label="Product" value={<b>{a.product}</b>} />
           <Row label="Vendor" value={a.vendor} />

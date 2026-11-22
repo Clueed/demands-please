@@ -8,7 +8,11 @@ import { REGIONS, type Rect } from "../layout";
  * is on top. Kept separate from `GameState` on purpose; the game rules never see it.
  * All coordinates are whole game pixels relative to the screen.
  */
-export type WindowId = "ticket" | "rulebook" | AttachmentKind;
+/** The desktop apps beside the service desk, stacked in one spot and switched from the taskbar. */
+/** In the order they start stacked, back to front. */
+export const APP_WINDOWS = ["catalog", "org", "mail", "intranet"] as const;
+export type AppWindowId = (typeof APP_WINDOWS)[number];
+export type WindowId = "ticket" | AppWindowId | AttachmentKind;
 
 export type ScreenState = {
   windows: Record<WindowId, Rect>;
@@ -21,20 +25,44 @@ export const TASKBAR_H = 14;
 /** The desktop area above the taskbar, where windows start out. */
 const DESK_H = REGIONS.screen.h - TASKBAR_H;
 const FULL_H = DESK_H - 8;
-const DOC = { w: 156, h: 150 };
-/** Attachments open stacked over the rulebook, clear of the ticket, each a little lower. */
-const doc = (i: number): Rect => ({ x: 276 + i * 6, y: 10 + i * 14, ...DOC });
+/**
+ * Where each app opens: sized to what's in it and dropped about the desktop, overlapping like
+ * a desk nobody tidied. Moving them around is part of the job.
+ */
+const APP_RECTS: Record<AppWindowId, Rect> = {
+  // Long and narrow, peeking out on the left and along the top.
+  catalog: { x: 182, y: 4, w: 222, h: 230 },
+  // A short tree; its title bar and right edge stick out from behind mail.
+  org: { x: 290, y: 14, w: 160, h: 158 },
+  mail: { x: 200, y: 30, w: 220, h: 150 },
+  // Just two short lists, over mail's corner.
+  intranet: { x: 298, y: 124, w: 150, h: 126 },
+};
+/** How tall each attachment opens: as long as its paper, with a little room for a long business case. */
+const DOC_H: Record<AttachmentKind, number> = {
+  businessCase: 104,
+  vendorSheet: 90,
+  certificate: 106,
+  worksCouncil: 90,
+};
+/** Attachments open stacked over the apps, clear of the ticket, each a little lower. */
+const doc = (kind: AttachmentKind, i: number): Rect => ({
+  x: 276 + i * 6,
+  y: 10 + i * 14,
+  w: 156,
+  h: DOC_H[kind],
+});
 
 export const initialScreen = (): ScreenState => ({
   windows: {
     ticket: { x: 4, y: 4, w: 180, h: FULL_H },
-    rulebook: { x: 188, y: 4, w: REGIONS.screen.w - 192, h: FULL_H },
-    businessCase: doc(0),
-    vendorSheet: doc(1),
-    certificate: doc(2),
-    worksCouncil: doc(3),
+    ...APP_RECTS,
+    businessCase: doc("businessCase", 0),
+    vendorSheet: doc("vendorSheet", 1),
+    certificate: doc("certificate", 2),
+    worksCouncil: doc("worksCouncil", 3),
   },
-  order: ["rulebook", "ticket"],
+  order: [...APP_WINDOWS, "ticket"],
 });
 
 export type ScreenAction =

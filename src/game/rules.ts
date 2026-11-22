@@ -102,7 +102,7 @@ export const RULES: Rule[] = [
     id: "strategy",
     day: 5,
     title: "Strategic fit",
-    text: "Only buy new apps in this year's focus areas. See the strategy.",
+    text: "Only buy new apps in this year's focus areas. See the CIO's strategy memo in Mail.",
     check: (d) =>
       STRATEGY.focus.includes(d.capabilityId)
         ? null
@@ -112,7 +112,7 @@ export const RULES: Rule[] = [
     id: "reuse",
     day: 6,
     title: "Reuse first",
-    text: "If an app in the catalog already does the job, offer it instead. That's allowed in any area.",
+    text: "If an app in the service catalog already does the job, offer it instead. That's allowed in any area.",
   },
   {
     id: "sso",
@@ -128,7 +128,7 @@ export const RULES: Rule[] = [
     id: "techRadar",
     day: 8,
     title: "Tech radar",
-    text: "Don't buy from vendors on hold. See the tech radar.",
+    text: "Don't buy from vendors on hold. See the tech radar on the intranet.",
     check: (d) =>
       TECH_RADAR.hold.includes(d.vendor) ? `${d.vendor} is on hold on the tech radar.` : null,
   },

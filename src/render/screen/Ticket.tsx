@@ -16,10 +16,19 @@ import { FILE_NAMES } from "./attachments";
 /** Ticket fields that only show once a rule needs them. */
 const FIELD_FROM = { retires: 10 };
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  center,
+  children,
+}: {
+  label: string;
+  /** Centre the label on its value, for values that aren't a line of text. */
+  center?: boolean;
+  children: ReactNode;
+}) {
   return (
     <>
-      <dt className="office-label">{label}</dt>
+      <dt className={cn("office-label", center && "self-center")}>{label}</dt>
       <dd className="truncate">{children}</dd>
     </>
   );
@@ -33,7 +42,7 @@ export function Ticket({
   demand,
   day,
   resolution,
-  opened,
+  viewed,
   onOpen,
   onApprove,
   onDecline,
@@ -43,7 +52,7 @@ export function Ticket({
   day: number;
   resolution: Resolution | undefined;
   /** Attachments currently open in a window. */
-  opened: AttachmentKind[];
+  viewed: AttachmentKind[];
   onOpen: (kind: AttachmentKind) => void;
   onApprove: () => void;
   onDecline: () => void;
@@ -79,7 +88,7 @@ export function Ticket({
           <Field label="Approver">
             {demand.sponsor ?? <span className="office-empty">none</span>}
           </Field>
-          <Field label="App">
+          <Field label="App" center>
             <span className="flex items-center gap-2">
               <AppIcon name={demand.app} />
               <b>{demand.app}</b>
@@ -108,11 +117,12 @@ export function Ticket({
                 <li key={f.kind}>
                   <button
                     className="office-file"
-                    data-open={opened.includes(f.kind)}
+                    data-viewed={viewed.includes(f.kind)}
                     onClick={() => onOpen(f.kind)}
                   >
                     <Paperclip aria-hidden="true" />
-                    {FILE_NAMES[f.kind]}
+                    <span className="flex-1 truncate">{FILE_NAMES[f.kind]}</span>
+                    {viewed.includes(f.kind) && <Check aria-label="Opened" />}
                   </button>
                 </li>
               ))}

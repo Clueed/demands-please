@@ -48,10 +48,11 @@ export function DayOverlay({
         {state.day === 1 && (
           <p className="office-muted">
             Approve or decline each request, then press Next. Open the attached files to check them.
-            The clock starts when you start the day and keeps running while you read. The office
-            closes at 17:00, and anyone still waiting then goes off and buys their own tools. Wrong
-            calls become audit findings; see everyone by 16:00 and the auditor may have time for a
-            coffee.
+            New rules come by mail, and the org chart shows who heads which department. Switch apps
+            from the taskbar. The clock starts when you start the day and keeps running while you
+            read. The office closes at 17:00, and anyone still waiting then goes off and buys their
+            own tools. Wrong calls become audit findings; see everyone by 16:00 and the auditor may
+            have time for a coffee.
           </p>
         )}
         <p>{state.queue.length} visitors today. Closing time 17:00.</p>

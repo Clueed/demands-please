@@ -34,8 +34,8 @@ describe("screenReducer", () => {
     }
   });
 
-  it("starts with the rulebook and ticket open, attachments closed", () => {
-    expect(initialScreen().order).toEqual(["rulebook", "ticket"]);
+  it("starts with every app and the ticket open, attachments closed", () => {
+    expect(initialScreen().order).toEqual(["catalog", "org", "mail", "intranet", "ticket"]);
   });
 
   it("moves a window, letting it hang off the left and bottom", () => {
@@ -75,9 +75,12 @@ describe("screenReducer", () => {
 
   it("raises a window to the top of the stack", () => {
     const screen = initialScreen();
-    expect(screenReducer(screen, { type: "raise", id: "rulebook" }).order).toEqual([
+    expect(screenReducer(screen, { type: "raise", id: "catalog" }).order).toEqual([
+      "org",
+      "mail",
+      "intranet",
       "ticket",
-      "rulebook",
+      "catalog",
     ]);
     expect(screenReducer(screen, { type: "raise", id: "ticket" })).toBe(screen);
   });
@@ -107,9 +110,9 @@ describe("screenReducer", () => {
     screen = screenReducer(screen, { type: "raise", id: "ticket" });
 
     screen = screenReducer(screen, { type: "closeTopAttachment" });
-    expect(screen.order).toEqual(["rulebook", "vendorSheet", "ticket"]);
+    expect(screen.order).toEqual([...initialScreen().order.slice(0, -1), "vendorSheet", "ticket"]);
     screen = screenReducer(screen, { type: "closeTopAttachment" });
-    expect(screen.order).toEqual(["rulebook", "ticket"]);
+    expect(screen.order).toEqual(initialScreen().order);
     expect(screenReducer(screen, { type: "closeTopAttachment" })).toBe(screen);
   });
 });
