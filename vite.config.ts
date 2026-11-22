@@ -7,7 +7,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
 /** Where the game is served, for canonical links, social cards and the sitemap. */
-const SITE_URL = (process.env.SITE_URL ?? "https://demands-pls.demands-please.workers.dev").replace(/\/$/, "");
+const SITE_URL = (process.env.SITE_URL ?? "https://demands-pls.demands-pls.workers.dev").replace(/\/$/, "");
 
 /** Fills `%SITE_URL%` in index.html and writes robots.txt and sitemap.xml next to it. */
 function seo(siteUrl: string): Plugin {
