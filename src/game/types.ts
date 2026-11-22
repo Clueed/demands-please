@@ -4,6 +4,12 @@ export type Capability = {
   name: string;
 };
 
+/** Who someone is, as far as their portrait goes. */
+export type Gender = "female" | "male";
+
+/** Someone who brings requests to the desk. */
+export type Person = { name: string; role: string; gender: Gender };
+
 /** An application already in the portfolio. */
 export type CatalogApp = {
   id: string;
@@ -51,7 +57,7 @@ export type Demand = {
   id: string;
   /** Ticket number shown to the player, e.g. "REQ-1004". */
   ticket: string;
-  requester: { name: string; role: string };
+  requester: Person;
   /** The requester's department, which is also the business area the app would serve. */
   capabilityId: string;
   app: string;

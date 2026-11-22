@@ -1,4 +1,4 @@
-import type { Capability, CatalogApp } from "./types.ts";
+import type { Capability, CatalogApp, Person } from "./types.ts";
 
 export const CAPABILITIES: Capability[] = [
   { id: "sales-marketing", name: "Sales & Marketing" },
@@ -18,26 +18,34 @@ export const DEPARTMENT_HEADS: Record<string, { name: string; title: string }> =
 };
 
 /** People who bring requests to the desk. None of them can approve their own. */
-export const STAFF: Record<string, { name: string; role: string }[]> = {
+export const STAFF: Record<string, Person[]> = {
   "sales-marketing": [
-    { name: "Stefan Kühn", role: "Marketing Lead" },
-    { name: "Marco Rossi", role: "Sales Manager" },
-    { name: "Noah Becker", role: "Social Media Manager" },
+    { name: "Stefan Kühn", role: "Marketing Lead", gender: "male" },
+    { name: "Marco Rossi", role: "Sales Manager", gender: "male" },
+    { name: "Noah Becker", role: "Social Media Manager", gender: "male" },
+    { name: "Hannah Scholz", role: "Key Account Manager", gender: "female" },
+    { name: "Yasmin Okafor", role: "Content Strategist", gender: "female" },
   ],
   finance: [
-    { name: "Tomasz Nowak", role: "Finance Controller" },
-    { name: "Clara Wendt", role: "Procurement Analyst" },
-    { name: "Ines Haas", role: "Accountant" },
+    { name: "Tomasz Nowak", role: "Finance Controller", gender: "male" },
+    { name: "Clara Wendt", role: "Procurement Analyst", gender: "female" },
+    { name: "Ines Haas", role: "Accountant", gender: "female" },
+    { name: "Karl Dietrich", role: "Treasury Analyst", gender: "male" },
+    { name: "Sophie Albrecht", role: "Payroll Accountant", gender: "female" },
   ],
   hr: [
-    { name: "Aylin Demir", role: "HR Business Partner" },
-    { name: "Felix Hahn", role: "Payroll Specialist" },
-    { name: "Mira Schulz", role: "Recruiter" },
+    { name: "Aylin Demir", role: "HR Business Partner", gender: "female" },
+    { name: "Felix Hahn", role: "Payroll Specialist", gender: "male" },
+    { name: "Mira Schulz", role: "Recruiter", gender: "female" },
+    { name: "Emre Yilmaz", role: "Learning Coordinator", gender: "male" },
+    { name: "Greta Pohl", role: "Benefits Manager", gender: "female" },
   ],
   manufacturing: [
-    { name: "Lena Brandt", role: "Design Engineer" },
-    { name: "Jens Vogel", role: "Maintenance Lead" },
-    { name: "Petra Lange", role: "Quality Manager" },
+    { name: "Lena Brandt", role: "Design Engineer", gender: "female" },
+    { name: "Jens Vogel", role: "Maintenance Lead", gender: "male" },
+    { name: "Petra Lange", role: "Quality Manager", gender: "female" },
+    { name: "Bernd Kowalski", role: "Shift Supervisor", gender: "male" },
+    { name: "Ravi Menon", role: "Process Engineer", gender: "male" },
   ],
 };
 

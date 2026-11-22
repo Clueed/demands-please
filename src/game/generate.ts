@@ -133,6 +133,8 @@ type Today = {
   apps: Set<string>;
   /** Catalog apps already named to retire or to offer: each goes at most once a day. */
   catalog: Set<string>;
+  /** People already at the desk today: everyone comes at most once a day. */
+  people: Set<string>;
 };
 
 /** A catalog app of the area to retire, one nobody else has claimed today if there is one. */
@@ -176,7 +178,7 @@ function validDemand(
   return {
     id: `t${ticket}`,
     ticket: `REQ-${ticket}`,
-    requester: r.pick(STAFF[a.capabilityId] ?? []),
+    requester: r.pick(freshPeople(a.capabilityId, today)),
     capabilityId: a.capabilityId,
     app: a.app,
     vendor: a.vendor,
@@ -332,16 +334,24 @@ function generateDemand(w: World, r: Rng, day: number, ticket: number, today: To
   return breakField ? breakField(demand, r, today) : demand;
 }
 
+/** The department's people who haven't been to the desk today, or all of them if everyone has. */
+function freshPeople(capabilityId: string, today: Today) {
+  const staff = STAFF[capabilityId] ?? [];
+  const notYet = staff.filter((p) => !today.people.has(p.name));
+  return notYet.length > 0 ? notYet : staff;
+}
+
 /** New tickets for every day of the run. */
 export function generateDays(seed: number): Demand[][] {
   const r = rng(seed);
   const world = makeWorld(r);
   let ticket = 1001;
   return Array.from({ length: LAST_DAY }, (_, i) => {
-    const today: Today = { apps: new Set(), catalog: new Set() };
+    const today: Today = { apps: new Set(), catalog: new Set(), people: new Set() };
     return Array.from({ length: DEMANDS_PER_DAY }, () => {
       const demand = generateDemand(world, r, i + 1, ticket++, today);
       today.apps.add(demand.app);
+      today.people.add(demand.requester.name);
       if (demand.retires) today.catalog.add(demand.retires);
       const offered = CATALOG.find((c) => c.id === demand.matchId);
       if (offered) today.catalog.add(offered.name);

@@ -1249,6 +1249,36 @@
   opacity: 0;
   animation: window-cloud 45s 10s steps(12) infinite;
 }
+/* Each new visitor steps up from the side, then drops into the chair; then they pitch. */
+.visitor-arrive {
+  animation: visitor-arrive 700ms steps(7) both;
+}
+.visitor-pitch {
+  animation: visitor-pitch 200ms 700ms steps(2) both;
+}
+@keyframes visitor-arrive {
+  0% {
+    opacity: 0;
+    transform: translate(40px, -14px);
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(0, -14px);
+  }
+  85% {
+    transform: translate(0, 2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes visitor-pitch {
+  from {
+    opacity: 0;
+  }
+}
 @keyframes visitor-blink {
   0%,
   2% {
@@ -1289,6 +1319,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .visitor-blink,
+  .visitor-arrive,
+  .visitor-pitch,
   .window-cloud {
     animation: none;
   }

@@ -182,6 +182,21 @@ describe("generateDays", () => {
     }
   });
 
+  it("only brings someone back the same day once everyone in their department has been", () => {
+    const tooSoon: string[] = [];
+    for (let seed = 0; seed < 50; seed++)
+      for (const tickets of generateDays(seed)) {
+        const seen = new Set<string>();
+        for (const t of tickets) {
+          const department = STAFF[t.capabilityId]!.map((p) => p.name);
+          if (seen.has(t.requester.name) && !department.every((name) => seen.has(name)))
+            tooSoon.push(`seed ${seed}: ${t.requester.name}`);
+          seen.add(t.requester.name);
+        }
+      }
+    expect(tooSoon).toEqual([]);
+  });
+
   it("never runs out of apps to ask for, whatever the seed", () => {
     for (let seed = 0; seed < 500; seed++) expect(() => generateDays(seed)).not.toThrow();
   });
