@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { CAPABILITIES, capabilityName, DEPARTMENT_HEADS, STRATEGY, TECH_RADAR } from "@/game/data";
@@ -103,34 +102,45 @@ export function Rulebook({
           </>
         )}
 
-        {tab === "catalog" &&
-          CAPABILITIES.map((c) => (
-            <section key={c.id} className="mb-3">
-              <p className="office-label">{c.name}</p>
-              <ul>
-                {activeCatalog(retired)
-                  .filter((a) => a.capabilityId === c.id)
-                  .map((app) => (
-                    <li key={app.id} className="office-app-card">
-                      <b className="flex items-center gap-2">
-                        <AppIcon name={app.name} />
-                        {app.name}
-                      </b>
-                      <p className="office-desc">{app.description}</p>
-                      <button
-                        className="office-offer"
-                        aria-label={`Offer ${app.name} instead`}
-                        disabled={!canOffer}
-                        onClick={() => onOffer(app.id)}
-                      >
-                        Offer instead
-                        <ChevronRight />
-                      </button>
-                    </li>
-                  ))}
-              </ul>
-            </section>
-          ))}
+        {tab === "catalog" && (
+          <>
+            <p className="office-muted mb-2">
+              {canOffer
+                ? "Offering an app decides the request, like Approve or Decline."
+                : "Apps can be offered while a request is in review."}
+            </p>
+            {CAPABILITIES.map((c) => (
+              <section key={c.id} className="mb-3">
+                <h3 className="office-catalog-heading">
+                  <span className="office-swatch" style={{ background: departmentColor(c.id) }} />
+                  {c.name}
+                </h3>
+                <ul>
+                  {activeCatalog(retired)
+                    .filter((a) => a.capabilityId === c.id)
+                    .map((app) => (
+                      <li key={app.id} className="office-app-card">
+                        <div className="flex items-center gap-2">
+                          <AppIcon name={app.name} />
+                          <b className="flex-1">{app.name}</b>
+                          {canOffer && (
+                            <button
+                              className="office-control office-offer"
+                              aria-label={`Offer ${app.name} instead`}
+                              onClick={() => onOffer(app.id)}
+                            >
+                              Offer
+                            </button>
+                          )}
+                        </div>
+                        <p className="office-desc">{app.description}</p>
+                      </li>
+                    ))}
+                </ul>
+              </section>
+            ))}
+          </>
+        )}
 
         {tab === "radar" && (
           <>

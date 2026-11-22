@@ -458,6 +458,11 @@
 .office-rulebook {
   background: var(--paper-hi);
 }
+/* The binder runs long late in the run: show how far down you are. */
+.office-scroll.office-rulebook {
+  scrollbar-width: thin;
+  scrollbar-color: var(--frame) var(--paper-lo);
+}
 .office-rule {
   padding: calc(var(--gp) * 2) calc(var(--gp) * 3);
   background: var(--paper);
@@ -519,33 +524,32 @@
   margin-top: var(--gp);
   color: var(--ink);
 }
-/* Offering is the secondary move: a quiet link until hovered. */
+/* Offering decides the request, so it's a button like Approve and Decline, only smaller. */
 .office-offer {
-  display: inline-flex;
+  padding: 0 calc(var(--gp) * 3);
+  font-size: calc(var(--gp) * 6);
+}
+/* Department headings stay in view while their apps scroll by. */
+.office-catalog-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
   align-items: center;
-  gap: var(--gp);
-  padding: 0 calc(var(--gp) * 2);
-  margin-left: calc(var(--gp) * -2);
-  margin-top: var(--gp);
-  color: #2f5a48;
-  text-decoration: underline;
-  text-decoration-thickness: var(--gp);
-  text-underline-offset: calc(var(--gp) * 2);
-  cursor: pointer;
+  gap: calc(var(--gp) * 2);
+  padding: calc(var(--gp) * 1) 0;
+  background: var(--paper-hi);
+  border-bottom: var(--gp) solid var(--rule);
+  font-family: var(--pixel-caps);
+  font-size: calc(var(--gp) * 6.5);
+  line-height: calc(var(--gp) * 8);
+  text-transform: uppercase;
+  letter-spacing: calc(var(--gp) * 0.5);
+  color: var(--ink);
 }
-.office-offer:hover:enabled {
-  background: var(--paper-lo);
-  text-decoration: none;
-  outline: var(--gp) solid var(--frame);
-}
-.office-offer:disabled {
-  color: #7d8a80;
-  text-decoration: none;
-  cursor: default;
-}
-.office-offer svg {
-  width: calc(var(--gp) * 6);
+.office-catalog-heading .office-swatch {
   height: calc(var(--gp) * 6);
+  align-self: center;
 }
 
 /* The ticket: a service desk record. */
