@@ -880,7 +880,7 @@
   font-weight: 600;
 }
 
-/* Paused: the monitor goes dark but for the time it stopped at, and a slow hint. */
+/* Paused: the monitor goes dark but for the time, ticking at real speed, and a slow hint. */
 .office-lock {
   position: absolute;
   inset: 0;

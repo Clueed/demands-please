@@ -83,8 +83,14 @@ function reducer(state: AppState, action: Action): AppState {
   return game === state.game ? state : { ...state, game };
 }
 
-/** Runs the game clock while the day is on. A hidden tab stops it, like a paused game. */
-function useGameClock(running: boolean, dispatch: (action: Action) => void) {
+/** Real time per game minute on a break: the clock runs at the speed of a wall clock. */
+const MS_PER_REAL_MINUTE = 60_000;
+
+/**
+ * Runs the game clock while the day is on, `msPerMinute` real ms to a game minute.
+ * A hidden tab stops it.
+ */
+function useGameClock(running: boolean, msPerMinute: number, dispatch: (action: Action) => void) {
   useEffect(() => {
     if (!running) return undefined;
     let last = performance.now();
@@ -92,11 +98,11 @@ function useGameClock(running: boolean, dispatch: (action: Action) => void) {
       // Capped, so coming back to the tab doesn't fast-forward the day.
       const ms = Math.min(now - last, 250);
       last = now;
-      dispatch({ type: "tick", minutes: ms / MS_PER_GAME_MINUTE });
+      dispatch({ type: "tick", minutes: ms / msPerMinute });
       frame = requestAnimationFrame(loop);
     });
     return () => cancelAnimationFrame(frame);
-  }, [running, dispatch]);
+  }, [running, msPerMinute, dispatch]);
 }
 
 /** How often (real ms) the running clock alone is worth saving. Decisions save at once. */
@@ -182,7 +188,12 @@ export function App() {
   const [paused, setPaused] = useState(false);
   const togglePause = () => setPaused((p) => !p);
 
-  useGameClock(game.phase === "working" && !paused && !frozen, dispatch);
+  // On a break the day goes on, but only as fast as a real clock.
+  useGameClock(
+    game.phase === "working" && !frozen,
+    paused ? MS_PER_REAL_MINUTE : MS_PER_GAME_MINUTE,
+    dispatch,
+  );
   useSaveRun(game);
   useDebugConsole(game, dispatch);
 
