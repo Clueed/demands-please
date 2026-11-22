@@ -17,7 +17,7 @@ export const WINDOW_ICONS: Record<WindowId, typeof Ticket> = {
   catalog: LayoutGrid,
   mail: Mail,
   org: Network,
-  guardrails: Globe,
+  intranet: Globe,
   businessCase: FileText,
   vendorSheet: FileSpreadsheet,
   certificate: FileBadge,
@@ -30,5 +30,5 @@ export const APPS: { id: "ticket" | AppWindowId; label: string; from: number }[]
   { id: "catalog", label: "Service catalog", from: 6 },
   { id: "mail", label: "Mail", from: 1 },
   { id: "org", label: "Org chart", from: 1 },
-  { id: "guardrails", label: "EA guardrails", from: 8 },
+  { id: "intranet", label: "Intranet", from: 8 },
 ];

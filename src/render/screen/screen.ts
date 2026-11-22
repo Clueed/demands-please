@@ -10,7 +10,7 @@ import { REGIONS, type Rect } from "../layout";
  */
 /** The desktop apps beside the service desk, stacked in one spot and switched from the taskbar. */
 /** In the order they start stacked, back to front. */
-export const APP_WINDOWS = ["catalog", "org", "mail", "guardrails"] as const;
+export const APP_WINDOWS = ["catalog", "org", "mail", "intranet"] as const;
 export type AppWindowId = (typeof APP_WINDOWS)[number];
 export type WindowId = "ticket" | AppWindowId | AttachmentKind;
 
@@ -37,7 +37,7 @@ const APP_RECTS: Record<AppWindowId, Rect> = {
   // Roomy enough for the evening report, which opens here.
   mail: { x: 184, y: 22, w: 268, h: 228 },
   // Just two short lists, over mail's corner.
-  guardrails: { x: 298, y: 124, w: 150, h: 126 },
+  intranet: { x: 298, y: 124, w: 150, h: 126 },
 };
 /** How tall each attachment opens: as long as its paper, with a little room for a long business case. */
 const DOC_H: Record<AttachmentKind, number> = {

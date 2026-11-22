@@ -10,7 +10,7 @@ import { ConfirmRestart } from "../screen/ConfirmRestart";
 import { LockScreen } from "../screen/LockScreen";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
-import { Guardrails } from "../screen/Guardrails";
+import { Intranet } from "../screen/Intranet";
 import { Mail } from "../screen/Mail";
 import { OrgChart } from "../screen/OrgChart";
 import { initialScreen, screenReducer } from "../screen/screen";
@@ -107,9 +107,9 @@ export function Screen({
       <ScreenWindow id="org" label="Org chart" {...win}>
         <OrgChart />
       </ScreenWindow>
-      {has("guardrails") && (
-        <ScreenWindow id="guardrails" label="Enterprise architecture guardrails" {...win}>
-          <Guardrails />
+      {has("intranet") && (
+        <ScreenWindow id="intranet" label="Intranet" {...win}>
+          <Intranet />
         </ScreenWindow>
       )}
 

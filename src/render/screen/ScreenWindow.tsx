@@ -96,9 +96,9 @@ export function ScreenWindow({
         data-window-handle
         className="office-titlebar flex shrink-0 cursor-grab touch-none items-center justify-between px-4 text-game-sm"
       >
-        <span className="flex min-w-0 items-center gap-3 whitespace-nowrap">
+        <span className="flex items-center gap-3">
           <Icon aria-hidden="true" />
-          <span className="truncate">{label}</span>
+          {label}
         </span>
         <span className="office-titlebar-ridges" aria-hidden="true" />
         {onClose && (

@@ -130,7 +130,7 @@ export const RULES: Rule[] = [
     id: "techRadar",
     day: 8,
     title: "Tech radar",
-    text: "Don't buy from vendors on hold. See the tech radar in the enterprise architecture guardrails.",
+    text: "Don't buy from vendors on hold. See the tech radar on the intranet.",
     check: (d) =>
       TECH_RADAR.hold.includes(d.vendor) ? `${d.vendor} is on hold on the tech radar.` : null,
   },
