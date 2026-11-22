@@ -7,7 +7,6 @@ import { Fidget } from "./Fidget";
 import { Keyboard } from "./Keyboard";
 import { Px } from "./Px";
 
-const FONT = "'Office Pixel', 'Geist Variable', monospace";
 /** Shadows fall down and to the left, away from the window on the right. */
 const SHADOW = "#9f8462";
 
@@ -201,7 +200,7 @@ export function Room({
             x="13"
             y="17"
             textAnchor="middle"
-            fontFamily={FONT}
+
             fontSize="10"
             fontWeight="600"
             fill="#5b4c2a"
@@ -227,7 +226,7 @@ export function Room({
           <Px d="M0 10h68l4 12H-4Z" fill="#4c5d57" />
           <Px d="M0 10h68v2H0Z" fill="#6c7e75" />
           <Px d="M26 14h16v6H26Z" fill="#d9d4ba" />
-          <text x="34" y="19" textAnchor="middle" fontFamily={FONT} fontSize="5" fill="#3c4b46">
+          <text x="34" y="19" textAnchor="middle" fontSize="5" fill="#3c4b46">
             IN
           </text>
         </Fidget>
@@ -269,14 +268,7 @@ export function Room({
           <Px d="M-8 14h86l-2 6H-12Z" fill={SHADOW} />
           <Px d="M0 4h80l4 12H-4Z" fill="#3c4b46" />
           <Px d="M2 0h76l2 4H0Z" fill="#5d6d66" />
-          <text
-            x="40"
-            y="12"
-            textAnchor="middle"
-            fontFamily="'Pixelify Plain', monospace"
-            fontSize="7"
-            fill="#d8d3b4"
-          >
+          <text x="40" y="12" textAnchor="middle" fontSize="7" fill="#d8d3b4">
             DEMANDS, PLEASE
           </text>
         </Fidget>

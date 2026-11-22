@@ -41,7 +41,7 @@ export function Stage({ children }: { children: ReactNode }) {
       {/* Bars around the game window. Placeholder: the frame around it is a style decision. */}
       <div className="fixed inset-0 overflow-hidden bg-neutral-900">
         <div
-          className="absolute overflow-hidden font-game text-game select-none [image-rendering:pixelated]"
+          className="absolute overflow-hidden text-game select-none [image-rendering:pixelated]"
           style={style}
         >
           {children}

@@ -58,26 +58,28 @@ export function Taskbar({
           {/* Clicking anywhere else closes the menu. */}
           <div className="fixed inset-0" onClick={() => setMenuOpen(false)} />
           <div className="office-start-menu" role="menu">
-            <button
-              role="menuitem"
-              className="office-menu-item"
-              onClick={() => {
-                setMenuOpen(false);
-                onPause();
-              }}
-            >
-              <Power aria-hidden="true" /> Take a break
-            </button>
-            <button
-              role="menuitem"
-              className="office-menu-item"
-              onClick={() => {
-                setMenuOpen(false);
-                onRestart();
-              }}
-            >
-              <RotateCcw aria-hidden="true" /> Restart game
-            </button>
+            <div className="office-start-items">
+              <button
+                role="menuitem"
+                className="office-menu-item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onPause();
+                }}
+              >
+                <Power aria-hidden="true" /> Take a break
+              </button>
+              <button
+                role="menuitem"
+                className="office-menu-item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onRestart();
+                }}
+              >
+                <RotateCcw aria-hidden="true" /> Restart game
+              </button>
+            </div>
           </div>
         </>
       )}

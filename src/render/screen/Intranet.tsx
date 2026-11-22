@@ -4,7 +4,10 @@ import { TECH_RADAR } from "@/game/data";
 export function Intranet() {
   return (
     <div className="office-scroll office-page min-h-0 flex-1 overflow-y-auto p-3">
-      <p className="office-label mb-2">Enterprise architecture · Tech radar</p>
+      <p className="office-label mb-2">
+        <span className="whitespace-nowrap">Enterprise architecture</span> ·{" "}
+        <span className="whitespace-nowrap">Tech radar</span>
+      </p>
       <p className="office-label mb-1">Hold: don't buy</p>
       <ul className="office-radar is-hold mb-3">
         {TECH_RADAR.hold.map((v) => (

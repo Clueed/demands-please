@@ -28,8 +28,9 @@ export function Mail({ day }: { day: number }) {
                 <span>{m.day === day ? "Today" : `Day ${m.day}`}</span>
               </span>
               {m.kind === "policy" ? (
-                <span className="office-inbox-subject">
-                  <span className="office-rule-number">{m.rule.day}</span> {m.rule.title}
+                <span className="office-inbox-rule">
+                  <span className="office-rule-number">{m.rule.day}</span>
+                  <span className="office-inbox-subject">{m.rule.title}</span>
                 </span>
               ) : (
                 <span className="office-inbox-subject">{m.subject}</span>
@@ -49,7 +50,8 @@ function MailBody({ mail }: { mail: MailItem }) {
       <header className="office-mail-header">
         <b className="block">{mail.subject}</b>
         <span className="office-muted">
-          From {mail.from} · {formatDay(dayDate(mail.day))}
+          From {mail.from} ·{" "}
+          <span className="whitespace-nowrap">{formatDay(dayDate(mail.day))}</span>
         </span>
       </header>
       <div className="flex flex-col gap-2 p-3 pb-6">

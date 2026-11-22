@@ -4,8 +4,6 @@ import { departmentColor } from "../departments";
 import { money } from "@/lib/format";
 import { Px } from "./Px";
 
-const FONT = "'Office Pixel', 'Geist Variable', monospace";
-
 /**
  * One fixed portrait for the art-direction draft: a hopeful employee leaning in with a
  * printout. Drawn on a 148×314 grid; the bottom 300 rows sit above the desk's far edge.
@@ -99,7 +97,7 @@ export function Visitor({ demand, ticket }: { demand: Demand | undefined; ticket
           <Px d="M66 218h8v10h-8Z" fill="#9aa69a" />
           <Px d="M68 220h4v4h-4Z" fill="#c8a487" />
           <Px d="M76 218h6v2h-6Zm0 4h6v2h-6Z" fill="#7a877c" />
-          <text x="74" y="236" textAnchor="middle" fontFamily={FONT} fontSize="5" fill="#2b3f39">
+          <text x="74" y="236" textAnchor="middle" fontSize="5" fill="#2b3f39">
             {demand.requester.name.split(" ").at(-1)?.toUpperCase()}
           </text>
 
@@ -112,7 +110,7 @@ export function Visitor({ demand, ticket }: { demand: Demand | undefined; ticket
           <Px d="M44 270h60v44H44Z" fill="#3a3530" />
           <Px d="M46 272h56v42H46Z" fill="#efe9d2" />
           <Px d="M48 274h52v8H48Z" fill={stripe} />
-          <text x="50" y="281" fontFamily={FONT} fontSize="6" fill="#efe9d2">
+          <text x="50" y="281" fontSize="6" fill="#efe9d2">
             {ticket}
           </text>
           <Px d="M48 286h24v12H48Z" fill="#c9cfbf" />
@@ -139,7 +137,7 @@ export function Visitor({ demand, ticket }: { demand: Demand | undefined; ticket
           <g transform="translate(-14 8)">
             <Px d="M38 18h104v2h2v20h-2v2H88l-14 18V42H38v-2h-2V20h2Z" fill="#2f3c3a" />
             <Px d="M38 20h104v20H86l-10 14V40H38Z" fill="#d8d7c3" />
-            <text x="90" y="33" textAnchor="middle" fontFamily={FONT} fontSize="8" fill="#2b3f39">
+            <text x="90" y="33" textAnchor="middle" fontSize="8" fill="#2b3f39">
               Only {money(demand.cost)} a year!
             </text>
           </g>

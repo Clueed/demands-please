@@ -183,9 +183,7 @@ export function ConfirmRestart({
           Keep playing
         </button>
         <button className={cn(control, "office-decline")} onClick={onConfirm}>
-          <span>
-            <RotateCcw aria-hidden="true" /> Restart
-          </span>
+          <RotateCcw aria-hidden="true" /> Restart
         </button>
       </div>
     </Sheet>
