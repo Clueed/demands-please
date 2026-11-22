@@ -55,7 +55,7 @@ export type AttachmentKind = Attachment["kind"];
 /** A software request ticket: "please buy us X, because Y". */
 export type Demand = {
   id: string;
-  /** Ticket number shown to the player, e.g. "REQ-1004". */
+  /** Ticket number shown to the player, e.g. "DM-1004". */
   ticket: string;
   requester: Person;
   /** The requester's department, which is also the business area the app would serve. */

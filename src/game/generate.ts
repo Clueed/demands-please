@@ -194,7 +194,7 @@ function validDemand(
 
   return {
     id: `t${ticket}`,
-    ticket: `REQ-${ticket}`,
+    ticket: `DM-${ticket}`,
     requester: r.pick(freshPeople(a.capabilityId, today)),
     capabilityId: a.capabilityId,
     app: a.app,

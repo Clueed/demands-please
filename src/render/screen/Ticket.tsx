@@ -63,7 +63,7 @@ export function Ticket({
   return (
     <>
       <div className="office-toolbar flex items-center justify-between">
-        <span>{demand.ticket} · Software request</span>
+        <span>{demand.ticket}</span>
         <span className={cn("office-status", resolution && "is-closed")}>
           {resolution ? "Resolved" : "In review"}
         </span>

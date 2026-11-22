@@ -21,7 +21,7 @@ import type { Demand, GameState } from "./types";
 /** A ticket that passes every rule. */
 const valid = (over: Partial<Demand> = {}): Demand => ({
   id: "x",
-  ticket: "REQ-1",
+  ticket: "DM-1",
   requester: STAFF["sales-marketing"]![0]!,
   capabilityId: "sales-marketing",
   app: "PriceWise",
