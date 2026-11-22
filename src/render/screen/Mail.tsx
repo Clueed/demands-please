@@ -283,7 +283,7 @@ function MailBody({ mail, state }: { mail: MailItem; state: GameState }) {
       <div className="office-mail-body">
         {mail.kind === "policy" ? (
           <>
-            <p>The procurement policy has a new rule:</p>
+            <p>IT governance has a new rule:</p>
             <RuleCard rule={mail.rule} isNew={mail.day === state.day} />
             {mail.rule.day > 1 && (
               <p>Earlier rules still apply. Their emails are further down your inbox.</p>

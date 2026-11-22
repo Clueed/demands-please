@@ -47,7 +47,7 @@ const REFERENCE_MAIL: Mail[] = [
     id: `policy-${rule.id}`,
     day: rule.day,
     from: "CIO Office",
-    subject: `Policy update: ${rule.title}`,
+    subject: `IT governance update: ${rule.title}`,
     short: rule.title,
     kind: "policy",
     rule,

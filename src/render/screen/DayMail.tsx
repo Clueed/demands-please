@@ -45,7 +45,7 @@ export function DayMailBody({ mail, state }: { mail: Mail; state: GameState }) {
         </p>
         {rule && (
           <>
-            <p>The procurement policy has a new rule:</p>
+            <p>IT governance has a new rule:</p>
             <RuleCard rule={rule} isNew={day === state.day} />
           </>
         )}
