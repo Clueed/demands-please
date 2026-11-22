@@ -1817,3 +1817,32 @@
 .office-decline:active:enabled {
   box-shadow: inset var(--gp) var(--gp) 0 #0004;
 }
+
+/* The title screen's one button: clock in. Bevelled like Approve, only bigger. */
+.title-start {
+  --gp: var(--game-px);
+  position: absolute;
+  padding: calc(var(--gp) * 4) calc(var(--gp) * 10);
+  border: var(--gp) solid #1f342c;
+  background: #46705e;
+  color: #fbf8e6;
+  font-size: calc(var(--gp) * 12);
+  line-height: calc(var(--gp) * 14);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    inset calc(var(--gp) * -2) calc(var(--gp) * -2) 0 #2c4a3e,
+    inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #6a8c7c,
+    calc(var(--gp) * -3) calc(var(--gp) * 3) 0 #0004;
+}
+.title-start:hover {
+  background: #5b8a75;
+}
+.title-start:active {
+  transform: translate(calc(var(--gp) * -1), var(--gp));
+  box-shadow: inset calc(var(--gp) * 2) calc(var(--gp) * 2) 0 #2c4a3e;
+}
+.title-start:focus-visible {
+  outline: var(--gp) solid #fbf8e6;
+  outline-offset: calc(var(--gp) * 2);
+}

@@ -19,6 +19,7 @@ import { Room } from "@/render/scene/Room";
 import { Screen } from "@/render/scene/Screen";
 import { Visitor } from "@/render/scene/Visitor";
 import { Stage } from "@/render/Stage";
+import { TitleScreen } from "@/render/TitleScreen";
 
 type Action =
   | { type: "start" }
@@ -187,10 +188,12 @@ export function App() {
   // Paused is the monitor switched off: the power light or the start menu toggle it.
   const [paused, setPaused] = useState(false);
   const togglePause = () => setPaused((p) => !p);
+  // Every visit opens on the title screen, except in debug mode, which goes straight to the desk.
+  const [onTitle, setOnTitle] = useState(!debug);
 
   // On a break the day goes on, but only as fast as a real clock.
   useGameClock(
-    game.phase === "working" && !frozen,
+    game.phase === "working" && !frozen && !onTitle,
     paused ? MS_PER_REAL_MINUTE : MS_PER_GAME_MINUTE,
     dispatch,
   );
@@ -200,25 +203,32 @@ export function App() {
   return (
     <>
       <Stage>
-        <Room
-          paused={paused}
-          onPower={togglePause}
-          visitor={<Visitor demand={demand} ticket={demand?.ticket ?? ""} />}
-          screen={
-            <Screen
-              key={round}
-              state={game}
-              paused={paused}
-              onPause={togglePause}
-              onDecide={(decision) => dispatch({ type: "decide", decision })}
-              onNext={() => dispatch({ type: "next" })}
-              onStart={() => dispatch({ type: "start" })}
-              onNextDay={() => dispatch({ type: "nextDay" })}
-              onCoffee={() => dispatch({ type: "coffee" })}
-              onRestart={() => dispatch({ type: "restart" })}
-            />
-          }
-        />
+        {onTitle ? (
+          <TitleScreen
+            resume={game.day > 1 || game.log.length > 0}
+            onStart={() => setOnTitle(false)}
+          />
+        ) : (
+          <Room
+            paused={paused}
+            onPower={togglePause}
+            visitor={<Visitor demand={demand} ticket={demand?.ticket ?? ""} />}
+            screen={
+              <Screen
+                key={round}
+                state={game}
+                paused={paused}
+                onPause={togglePause}
+                onDecide={(decision) => dispatch({ type: "decide", decision })}
+                onNext={() => dispatch({ type: "next" })}
+                onStart={() => dispatch({ type: "start" })}
+                onNextDay={() => dispatch({ type: "nextDay" })}
+                onCoffee={() => dispatch({ type: "coffee" })}
+                onRestart={() => dispatch({ type: "restart" })}
+              />
+            }
+          />
+        )}
       </Stage>
       {debug && (
         <div className="pointer-events-none fixed top-0 left-0 z-50 bg-red-600 px-1.5 py-0.5 font-mono text-xs text-white">
