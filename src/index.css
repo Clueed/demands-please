@@ -221,6 +221,8 @@
   --color-neutral-800: #2e443e;
   --color-neutral-900: #20332f;
   color: var(--ink);
+  /* The pixel face draws "fi" and "fl" as one odd glyph. */
+  font-variant-ligatures: none;
 }
 /* Glass: a recessed edge, a soft glare from the window on the right, darker corners. */
 .office-display::after {
