@@ -297,7 +297,7 @@ describe("findings", () => {
     s = haveCoffee(s);
     expect(s).toMatchObject({ phase: "dayEnd", findings: 1, forgivenToday: true });
     // The latest finding is the one revisited.
-    expect(s.log.map((r) => r.closed)).toEqual([false, true, false]);
+    expect(s.log.map((r) => r.closedOn)).toEqual([null, s.day, null]);
     expect(haveCoffee(s)).toBe(s);
     expect(nextDay(s).forgivenToday).toBe(false);
   });

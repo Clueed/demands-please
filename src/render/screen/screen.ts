@@ -34,7 +34,8 @@ const APP_RECTS: Record<AppWindowId, Rect> = {
   catalog: { x: 182, y: 4, w: 222, h: 230 },
   // A short tree; its title bar and right edge stick out from behind mail.
   org: { x: 290, y: 14, w: 160, h: 158 },
-  mail: { x: 200, y: 30, w: 220, h: 150 },
+  // Roomy enough for the evening report, which opens here.
+  mail: { x: 184, y: 22, w: 268, h: 228 },
   // Just two short lists, over mail's corner.
   intranet: { x: 298, y: 124, w: 150, h: 126 },
 };

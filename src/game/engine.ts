@@ -55,7 +55,7 @@ export function decide(state: GameState, decision: Decision): GameState {
     day: state.day,
     at: state.clock,
     finding,
-    closed: false,
+    closedOn: null,
   };
   const findings = state.findings + (finding ? 1 : 0);
   return {
@@ -110,8 +110,8 @@ function endDay(state: GameState): GameState {
 /** Coffee with the auditor: the latest open finding gets closed. */
 export function haveCoffee(state: GameState): GameState {
   if (state.phase !== "coffee") return state;
-  const i = state.log.findLastIndex((r) => r.finding && !r.closed);
-  const log = state.log.map((r, j) => (j === i ? { ...r, closed: true } : r));
+  const i = state.log.findLastIndex((r) => r.finding && r.closedOn === null);
+  const log = state.log.map((r, j) => (j === i ? { ...r, closedOn: state.day } : r));
   return {
     ...state,
     log,
@@ -146,7 +146,13 @@ const summarize = (log: Resolution[]): Summary => ({
   wrong: log.filter((r) => r.finding),
 });
 
-export const summarizeDay = (state: GameState) =>
-  summarize(state.log.filter((r) => r.day === state.day));
+/** One day's decisions, today's unless another is named. */
+export const summarizeDay = (state: GameState, day = state.day) =>
+  summarize(state.log.filter((r) => r.day === day));
+
+/** Findings still open at the end of a day: wrong calls up to then, less those closed over coffee. */
+export const openFindingsAfter = (state: GameState, day: number) =>
+  state.log.filter((r) => r.finding && r.day <= day && (r.closedOn === null || r.closedOn > day))
+    .length;
 
 export const summarizeRun = (state: GameState) => summarize(state.log);

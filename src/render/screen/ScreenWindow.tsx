@@ -9,6 +9,8 @@ import { clampPointer, type ScreenAction, type ScreenState, type WindowId } from
 
 /** How far (game pixels) the pointer must move before a press becomes a drag. */
 const DRAG_THRESHOLD = 3;
+/** Above the shade over the rest of the desktop, below the taskbar. */
+const PINNED_Z = 60;
 
 /**
  * A window on the monitor: press to bring to the front, drag to move.
@@ -19,6 +21,7 @@ export function ScreenWindow({
   id,
   label,
   onClose,
+  pinned = false,
   screen,
   dispatch,
   children,
@@ -27,6 +30,8 @@ export function ScreenWindow({
   label: string;
   /** Shows a close button in the title bar. */
   onClose?: () => void;
+  /** Held in front of everything else on the desktop, which is shut out meanwhile. */
+  pinned?: boolean;
   screen: ScreenState;
   dispatch: Dispatch<ScreenAction>;
   children?: ReactNode;
@@ -83,8 +88,8 @@ export function ScreenWindow({
     <section
       aria-label={label}
       className="office-window absolute flex flex-col"
-      data-active={screen.order.at(-1) === id}
-      style={{ ...rectStyle(rect), zIndex: screen.order.indexOf(id) + 1 }}
+      data-active={pinned || screen.order.at(-1) === id}
+      style={{ ...rectStyle(rect), zIndex: pinned ? PINNED_Z : screen.order.indexOf(id) + 1 }}
       onPointerDown={onPointerDown}
     >
       <div

@@ -6,7 +6,7 @@ import { DAY_END, dayDate, FINDINGS_LIMIT, formatDay } from "@/game/time";
 import type { AttachmentKind, Decision, GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 
-import { ConfirmRestart, DayOverlay } from "../screen/DayOverlay";
+import { ConfirmRestart } from "../screen/ConfirmRestart";
 import { LockScreen } from "../screen/LockScreen";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
@@ -61,6 +61,14 @@ export function Screen({
   }
 
   const [confirmingRestart, setConfirmingRestart] = useState(false);
+  // Between visitors, the day waits on an email: only Mail can be used until it's archived.
+  const mailOnly = state.phase !== "working";
+  const archive: Partial<Record<GameState["phase"], () => void>> = {
+    briefing: on.onStart,
+    coffee: on.onCoffee,
+    dayEnd: on.onNextDay,
+  };
+  const onArchive = archive[state.phase];
   const apps = APPS.filter((a) => a.from <= state.day);
   const has = (id: string) => apps.some((a) => a.id === id);
   const top = screen.order.findLast((id) => has(id) || files.some((f) => f.kind === id));
@@ -93,8 +101,8 @@ export function Screen({
           />
         </ScreenWindow>
       )}
-      <ScreenWindow id="mail" label="Mail" {...win}>
-        <Mail day={state.day} />
+      <ScreenWindow id="mail" label="Mail" pinned={mailOnly} {...win}>
+        <Mail state={state} onArchive={() => onArchive?.()} onRestart={on.onRestart} />
       </ScreenWindow>
       <ScreenWindow id="org" label="Org chart" {...win}>
         <OrgChart />
@@ -139,6 +147,8 @@ export function Screen({
             </ScreenWindow>
           ))}
 
+      {mailOnly && <div className="office-shade absolute inset-0 z-50" aria-hidden="true" />}
+
       <Taskbar
         minutes={state.clock}
         date={formatDay(dayDate(state.day))}
@@ -153,7 +163,8 @@ export function Screen({
               key={id}
               className={cn("office-task", doc && "is-doc")}
               aria-label={label}
-              aria-pressed={top === id}
+              aria-pressed={mailOnly ? id === "mail" : top === id}
+              disabled={mailOnly && id !== "mail"}
               title={label}
               onClick={() => dispatch({ type: "raise", id })}
             >
@@ -180,15 +191,6 @@ export function Screen({
           Waiting {waiting}
         </span>
       </Taskbar>
-      {state.phase !== "working" && (
-        <DayOverlay
-          state={state}
-          onStart={on.onStart}
-          onNextDay={on.onNextDay}
-          onCoffee={on.onCoffee}
-          onRestart={on.onRestart}
-        />
-      )}
       {confirmingRestart && (
         <ConfirmRestart
           onConfirm={() => {

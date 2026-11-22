@@ -79,8 +79,8 @@ export type Resolution = {
   at: number;
   /** Why the decision was wrong, or null if it was right. */
   finding: string | null;
-  /** The finding was closed over coffee with the auditor. */
-  closed: boolean;
+  /** The day the finding was closed over coffee with the auditor, or null while it's open. */
+  closedOn: number | null;
 };
 
 export type Phase =
