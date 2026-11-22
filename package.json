@@ -2,6 +2,26 @@
   "name": "demands-pls",
   "version": "0.0.0",
   "private": true,
+  "description": "A pixel-art desk game about running the IT demand desk. Approve or decline software requests for 10 days, before shadow IT takes over. Free in your browser.",
+  "keywords": [
+    "browser-game",
+    "game",
+    "indie-game",
+    "it-governance",
+    "office-game",
+    "paperwork-game",
+    "pixel-art",
+    "shadow-it",
+    "web-game"
+  ],
+  "homepage": "https://demands-pls.demands-pls.workers.dev",
+  "bugs": {
+    "url": "https://github.com/Clueed/demands-please/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clueed/demands-please.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
