@@ -35,7 +35,7 @@ describe("screenReducer", () => {
   });
 
   it("starts with every app and the ticket open, attachments closed", () => {
-    expect(initialScreen().order).toEqual(["catalog", "org", "mail", "intranet", "ticket"]);
+    expect(initialScreen().order).toEqual(["catalog", "org", "mail", "guardrails", "ticket"]);
   });
 
   it("moves a window, letting it hang off the left and bottom", () => {
@@ -78,7 +78,7 @@ describe("screenReducer", () => {
     expect(screenReducer(screen, { type: "raise", id: "catalog" }).order).toEqual([
       "org",
       "mail",
-      "intranet",
+      "guardrails",
       "ticket",
       "catalog",
     ]);

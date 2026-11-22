@@ -1397,7 +1397,7 @@
   background: var(--paper);
   border-right: var(--gp) solid var(--rule);
 }
-/* Both of Mail's panes show a thin scrollbar, like the intranet, so long lists and emails read as such. */
+/* Both of Mail's panes show a thin scrollbar, like the guardrails, so long lists and emails read as such. */
 .office-mail-list,
 .office-mail {
   scrollbar-width: thin;

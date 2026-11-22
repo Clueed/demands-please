@@ -6,7 +6,7 @@ import { departmentColor } from "../departments";
 const MANAGING_DIRECTOR = { name: "Katrin Albers", title: "Managing Director" };
 
 /**
- * The org chart, as the company intranet would have it: the managing director and the head
+ * The org chart, as the company directory would have it: the managing director and the head
  * of each department under her. Whoever heads the requester's department signs the request.
  */
 export function OrgChart() {
