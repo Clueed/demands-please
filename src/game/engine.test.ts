@@ -95,6 +95,14 @@ describe("rules", () => {
     expect(verdict(ticket, 6).kind).toBe("decline");
   });
 
+  it("the certificate must be the vendor's own", () => {
+    const theirs = { ...valid().attachments[1]!, vendor: "Brightline" } as const;
+    const ticket = valid({ attachments: [valid().attachments[0]!, theirs] });
+    expect(judge(ticket, { kind: "approve" }, 4)).toMatch(
+      /issued to Brightline, not PriceWise Ltd/,
+    );
+  });
+
   it("a business case must save five times the annual cost", () => {
     const sheet = { ...valid().attachments[0]!, price: 30_000 } as const;
     const withCase = (savings: number) =>
@@ -139,6 +147,35 @@ describe("rules", () => {
     expect(RULES.map((r) => r.day)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 });
+
+/** Of the broken tickets on days `from` to `to` over many runs, the share that break that day's new rule. */
+const newestShare = (from: number, to: number) => {
+  let newest = 0;
+  let broken = 0;
+  for (let seed = 0; seed < 200; seed++)
+    generateDays(seed).forEach((tickets, i) => {
+      const day = i + 1;
+      if (day < from || day > to) return;
+      for (const t of tickets) {
+        const failed = RULES.filter((r) => r.day <= day && r.check?.(t, dayDate(day), []));
+        if (!failed.length || verdict(t, day).kind === "offer") continue;
+        broken++;
+        if (failed.some((r) => r.day === day)) newest++;
+      }
+    });
+  return newest / broken;
+};
+
+/** Business cases on `day` over many runs that land within 6% of the bar, either side. */
+const closeCases = (day: number) =>
+  Array.from({ length: 100 }, (_, seed) => generateDays(seed)[day - 1]!)
+    .flat()
+    .flatMap((t) =>
+      t.attachments.flatMap((a) =>
+        a.kind === "businessCase" && t.cost > 25_000 ? [a.savings / (t.cost * 5)] : [],
+      ),
+    )
+    .filter((m) => Math.abs(m - 1) < 0.06);
 
 describe("generateDays", () => {
   const days = generateDays(42);
@@ -226,6 +263,15 @@ describe("generateDays", () => {
       }
       expect(s).toMatchObject({ phase: "won", findings: 0 });
     }
+  });
+
+  it("brings the older rules back as the run goes on", () => {
+    expect(newestShare(2, 3)).toBeGreaterThan(0.5);
+    expect(newestShare(9, 10)).toBeLessThan(0.35);
+  });
+
+  it("makes close calls later in the run: savings within a few percent of the bar", () => {
+    expect(closeCases(8).length).toBeGreaterThan(closeCases(2).length * 2);
   });
 
   it("mixes approvals and declines", () => {

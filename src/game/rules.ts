@@ -93,6 +93,8 @@ export const RULES: Rule[] = [
     check: (d, today) => {
       const cert = attachment(d, "certificate");
       if (!cert) return "No security certificate attached.";
+      if (cert.vendor !== d.vendor)
+        return `The security certificate is issued to ${cert.vendor}, not ${d.vendor}.`;
       return cert.validUntil < today
         ? `The security certificate expired on ${formatDate(cert.validUntil)}.`
         : null;

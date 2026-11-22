@@ -40,8 +40,16 @@ export type Rng = ReturnType<typeof rng>;
 
 /** Share of tickets that break a rule. */
 const FLAW_CHANCE = 0.5;
-/** Of those, the share that break the rule that's new today, so it gets practised. */
-const NEWEST_RULE_CHANCE = 0.5;
+/**
+ * Of those, the share that break the rule that's new today, so it gets practised. It falls over
+ * the run, so the older rules keep coming back and checking only today's rule stops working.
+ */
+const newestRuleChance = (day: number) => 0.5 - (0.3 * (day - 1)) / (LAST_DAY - 1);
+/**
+ * Share of tickets made hard to call: a flaw by a hair, or a pass by a hair. None on the first
+ * two days, rising to three in four by day 8.
+ */
+const closeCallChance = (day: number) => Math.min(0.75, Math.max(0, (day - 2) / 8));
 /** Share of vendors whose security certificate runs out before or during the run. */
 const EXPIRING_CERT_CHANCE = 0.3;
 /** Share of apps that don't track employees but come with a works council approval anyway. */
@@ -101,12 +109,20 @@ const daysBetween = (from: string, to: string) =>
 const enoughSavings = (cost: number, r: Rng) =>
   Math.ceil((cost * BUSINESS_CASE_MULTIPLE * (1 + r.next() * 0.5)) / 1_000) * 1_000;
 
-/** Savings that look healthy but miss the bar: between 2× and just under the multiple. */
-function tooLittleSavings(cost: number, r: Rng) {
+/** Savings that clear the bar by a hair: under 4% over it. */
+const justEnoughSavings = (cost: number, r: Rng) =>
+  Math.ceil((cost * BUSINESS_CASE_MULTIPLE * (1 + r.next() * 0.04)) / 1_000) * 1_000;
+
+/**
+ * Savings that look healthy but miss the bar: between 2× and just under the multiple, or on a
+ * close call within 6% of it, so only doing the sum catches it.
+ */
+function tooLittleSavings(cost: number, r: Rng, close: boolean) {
   const needed = cost * BUSINESS_CASE_MULTIPLE;
-  const savings =
-    Math.floor((cost * (2 + r.next() * (BUSINESS_CASE_MULTIPLE - 2))) / 1_000) * 1_000;
-  return Math.min(savings, needed - 1_000);
+  const multiple = close
+    ? BUSINESS_CASE_MULTIPLE * (0.94 + r.next() * 0.05)
+    : 2 + r.next() * (BUSINESS_CASE_MULTIPLE - 2);
+  return Math.min(Math.floor((cost * multiple) / 1_000) * 1_000, needed - 1_000);
 }
 
 /**
@@ -165,7 +181,8 @@ function validDemand(
       kind: "businessCase",
       app: a.app,
       benefit: a.benefit,
-      savings: enoughSavings(cost, r),
+      // On a close call the case only just clears the bar: it looks wrong and isn't.
+      savings: r.chance(closeCallChance(day)) ? justEnoughSavings(cost, r) : enoughSavings(cost, r),
     });
   if (a.monitorsEmployees || r.chance(DECOY_APPROVAL_CHANCE))
     attachments.push({
@@ -209,7 +226,12 @@ const withoutAttachment = (d: Demand, kind: Attachment["kind"]) => ({
  * valid. Rules about the app (`APP_RULES`) are broken by the choice of app instead, apart from
  * the certificate, which can also just be missing.
  */
-const FIELD_FLAWS: Partial<Record<FlawRule, (d: Demand, r: Rng, today: Today) => Demand>> = {
+/** Rules with a by-a-hair way to break them in `FIELD_FLAWS`, for close calls. */
+const SUBTLE_RULES: FlawRule[] = ["businessCase", "vendorMatch", "certificate"];
+
+type FieldFlaw = (d: Demand, r: Rng, ctx: { today: Today; world: World; close: boolean }) => Demand;
+
+const FIELD_FLAWS: Partial<Record<FlawRule, FieldFlaw>> = {
   sponsor: (d, r) => {
     const otherHeads = Object.entries(DEPARTMENT_HEADS)
       .filter(([id]) => id !== d.capabilityId)
@@ -217,24 +239,32 @@ const FIELD_FLAWS: Partial<Record<FlawRule, (d: Demand, r: Rng, today: Today) =>
     const colleagues = (STAFF[d.capabilityId] ?? []).map((s) => s.name);
     return { ...d, sponsor: r.pick([null, r.pick(otherHeads), r.pick(colleagues)]) };
   },
-  businessCase: (d, r) => {
+  businessCase: (d, r, { close }) => {
     // Mostly a case whose numbers don't add up, so it's worth reading; sometimes none at all.
     const without = withoutAttachment(d, "businessCase");
     if (!r.chance(0.7)) return without;
     const benefit = ARCHETYPES.find((a) => a.app === d.app)?.benefit ?? "";
-    const savings = tooLittleSavings(d.cost, r);
+    const savings = tooLittleSavings(d.cost, r, close);
     return {
       ...without,
       attachments: [{ kind: "businessCase", app: d.app, benefit, savings }, ...without.attachments],
     };
   },
-  vendorMatch: (d, r) => {
+  vendorMatch: (d, r, { close }) => {
     const sheet = attachment(d, "vendorSheet");
     if (!sheet) return d;
-    const which = r.pick(["product", "vendor", "price"] as const);
+    const which = close ? "price" : r.pick(["product", "vendor", "price"] as const);
     if (which === "price") {
+      // Just under the business case line, so the ticket looks like it doesn't need one. It does.
+      if (close && d.cost > BUSINESS_CASE_THRESHOLD && r.chance(0.5)) {
+        const cost = BUSINESS_CASE_THRESHOLD - roundTo(r.next() * 3_000, 500);
+        return { ...withoutAttachment(d, "businessCase"), cost };
+      }
       // The requester rounds the price down on the ticket; the vendor's quote is the real one.
-      const cut = roundTo(2_000 + r.next() * Math.min(13_000, d.cost / 3), 500);
+      // On a close call by only a little.
+      const cut = close
+        ? roundTo(500 + r.next() * 1_000, 500)
+        : roundTo(2_000 + r.next() * Math.min(13_000, d.cost / 3), 500);
       return { ...d, cost: d.cost - cut };
     }
     const changed =
@@ -243,7 +273,15 @@ const FIELD_FLAWS: Partial<Record<FlawRule, (d: Demand, r: Rng, today: Today) =>
         : { ...sheet, vendor: r.pick(TECH_RADAR.adopt.filter((v) => v !== d.vendor)) };
     return { ...d, attachments: replace(d, changed) };
   },
-  certificate: (d) => withoutAttachment(d, "certificate"),
+  certificate: (d, r, { world, close }) => {
+    // On a close call a valid certificate is attached, only it's another vendor's.
+    const others = Object.entries(world.certs).filter(
+      ([v, c]) => v !== d.vendor && c.validUntil >= dayDate(LAST_DAY),
+    );
+    if (!close || others.length === 0) return withoutAttachment(d, "certificate");
+    const [vendor, cert] = r.pick(others);
+    return { ...d, attachments: replace(d, { kind: "certificate", vendor, ...cert }) };
+  },
   worksCouncil: (d, r) => {
     const approval = attachment(d, "worksCouncil");
     const how = r.pick(["missing", "rejected", "otherApp"] as const);
@@ -254,7 +292,7 @@ const FIELD_FLAWS: Partial<Record<FlawRule, (d: Demand, r: Rng, today: Today) =>
         : { ...approval, app: r.pick(ARCHETYPES.filter((a) => a.app !== d.app)).app };
     return { ...d, attachments: replace(d, changed) };
   },
-  retire: (d, r, today) => {
+  retire: (d, r, { today }) => {
     const otherArea = CATALOG.filter(
       (c) => c.capabilityId !== d.capabilityId && !today.catalog.has(c.name),
     );
@@ -309,16 +347,20 @@ function generateDemand(w: World, r: Rng, day: number, ticket: number, today: To
     // Half of them also break a rule on the ticket, as bait: offering is still right.
     const bait = flawRules.filter((id) => FIELD_FLAWS[id] && id !== "worksCouncil");
     const flaw = r.chance(0.5) && bait.length ? r.pick(bait) : null;
-    return flaw ? FIELD_FLAWS[flaw]!(demand, r, today) : demand;
+    return flaw ? FIELD_FLAWS[flaw]!(demand, r, { today, world: w, close: false }) : demand;
   }
 
+  // A close call breaks an older rule by a hair, among those that can be: one easy to miss.
+  const close = r.chance(closeCallChance(day));
+  const subtle = flawRules.filter((id) => SUBTLE_RULES.includes(id) && id !== newest.id);
   let flaw = r.chance(FLAW_CHANCE)
-    ? isFlawRule(newest.id) && r.chance(NEWEST_RULE_CHANCE)
+    ? isFlawRule(newest.id) && r.chance(newestRuleChance(day))
       ? newest.id
-      : r.pick(flawRules)
+      : r.pick(close && subtle.length ? subtle : flawRules)
     : null;
   // A broken certificate is an expired one when some vendor's has run out, else a missing one.
-  let certExpired = flaw === "certificate" && r.chance(0.7);
+  // On a close call, it's there and valid, only issued to someone else.
+  let certExpired = flaw === "certificate" && !close && r.chance(0.7);
   let apps = candidates(w, day, flaw, certExpired);
   if (apps.length === 0 && certExpired) {
     certExpired = false;
@@ -331,7 +373,7 @@ function generateDemand(w: World, r: Rng, day: number, ticket: number, today: To
 
   const demand = validDemand(r.pick(fresh(apps, today)), w, r, day, ticket, today);
   const breakField = flaw && !(flaw === "certificate" && certExpired) && FIELD_FLAWS[flaw];
-  return breakField ? breakField(demand, r, today) : demand;
+  return breakField ? breakField(demand, r, { today, world: w, close }) : demand;
 }
 
 /** The department's people who haven't been to the desk today, or all of them if everyone has. */
