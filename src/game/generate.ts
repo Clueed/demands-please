@@ -13,6 +13,7 @@ import {
   BUSINESS_CASE_MULTIPLE,
   BUSINESS_CASE_THRESHOLD,
   isInForce,
+  RULES,
   rulesInForce,
   type RuleId,
 } from "./rules";
@@ -40,11 +41,22 @@ export type Rng = ReturnType<typeof rng>;
 
 /** Share of tickets that break a rule. */
 const FLAW_CHANCE = 0.5;
+/** Tickets a day that break the rule new that day, so it bites the day it's taught. */
+const TEACHING_TICKETS = 2;
 /**
- * Of those, the share that break the rule that's new today, so it gets practised. It falls over
- * the run, so the older rules keep coming back and checking only today's rule stops working.
+ * Share of the other tickets that break a rule, any rule in force, so the day still breaks
+ * `FLAW_CHANCE` of its tickets. As the rules pile up, these are mostly older ones coming back.
  */
-const newestRuleChance = (day: number) => 0.5 - (0.3 * (day - 1)) / (LAST_DAY - 1);
+const OTHER_FLAW_CHANCE =
+  (FLAW_CHANCE * DEMANDS_PER_DAY - TEACHING_TICKETS) / (DEMANDS_PER_DAY - TEACHING_TICKETS);
+/**
+ * Share of teaching tickets that also break an older rule, rising over the run, so the older
+ * rules keep coming back even though two tickets a day go to the new one.
+ */
+const olderTooChance = (day: number) => (0.6 * (day - 1)) / (LAST_DAY - 1);
+/** Older rules a teaching ticket can break on top: ones its field flaw always breaks. */
+const SECOND_FLAWS: FlawRule[] = ["sponsor", "vendorMatch", "certificate"];
+
 /**
  * Share of tickets made hard to call: a flaw by a hair, or a pass by a hair. None on the first
  * two days, rising to three in four by day 8.
@@ -95,6 +107,17 @@ function makeWorld(r: Rng): World {
     if (candidates(world, LAST_DAY, null, false).length >= MIN_VALID_APPS) break;
     const cert = certs[a.vendor];
     if (cert && cert.validUntil < last) cert.validUntil = addDays(last, 90);
+  }
+  // Each app rule needs an app that breaks only it on the day it's taught: renew the
+  // certificate of one that breaks it, if none does yet.
+  for (const id of APP_RULE_IDS) {
+    if (id === "certificate") continue;
+    const day = RULES.find((rule) => rule.id === id)!.day;
+    for (const a of ARCHETYPES) {
+      if (candidates(world, day, id, false).length > 0) break;
+      const cert = certs[a.vendor];
+      if (!APP_RULES[id](a) && cert && cert.validUntil < last) cert.validUntil = addDays(last, 90);
+    }
   }
   return world;
 }
@@ -331,8 +354,18 @@ const fresh = (list: Archetype[], today: Today) => {
   return unused.length > 0 ? unused : list;
 };
 
-/** One new ticket for `day`. */
-function generateDemand(w: World, r: Rng, day: number, ticket: number, today: Today): Demand {
+/**
+ * One new ticket for `day`. A `teaching` ticket breaks the day's new rule, plainly: for reuse,
+ * one where offering a catalog app is the answer.
+ */
+function generateDemand(
+  w: World,
+  r: Rng,
+  day: number,
+  ticket: number,
+  today: Today,
+  teaching: boolean,
+): Demand {
   const rules = rulesInForce(day);
   const newest = rules.at(-1)!;
   const flawRules = rules.map((rule) => rule.id).filter(isFlawRule);
@@ -341,7 +374,8 @@ function generateDemand(w: World, r: Rng, day: number, ticket: number, today: To
   const owned = ARCHETYPES.filter(
     (a) => a.matchId && !today.catalog.has(CATALOG.find((c) => c.id === a.matchId)?.name ?? ""),
   );
-  if (isInForce("reuse", day) && owned.length && r.chance(newest.id === "reuse" ? 0.4 : 0.2)) {
+  const reuseChance = newest.id === "reuse" ? (teaching ? 1 : 0.4) : teaching ? 0 : 0.2;
+  if (isInForce("reuse", day) && owned.length && r.chance(reuseChance)) {
     const a = r.pick(fresh(owned, today));
     const demand = validDemand(a, w, r, day, ticket, today);
     // Half of them also break a rule on the ticket, as bait: offering is still right.
@@ -351,13 +385,15 @@ function generateDemand(w: World, r: Rng, day: number, ticket: number, today: To
   }
 
   // A close call breaks an older rule by a hair, among those that can be: one easy to miss.
-  const close = r.chance(closeCallChance(day));
+  const close = !teaching && r.chance(closeCallChance(day));
   const subtle = flawRules.filter((id) => SUBTLE_RULES.includes(id) && id !== newest.id);
-  let flaw = r.chance(FLAW_CHANCE)
-    ? isFlawRule(newest.id) && r.chance(newestRuleChance(day))
+  let flaw =
+    teaching && isFlawRule(newest.id)
       ? newest.id
-      : r.pick(close && subtle.length ? subtle : flawRules)
-    : null;
+      : // Reuse is taught with offers, not declines: the rest break rules as usual.
+        r.chance(newest.id === "reuse" ? FLAW_CHANCE : OTHER_FLAW_CHANCE)
+        ? r.pick(close && subtle.length ? subtle : flawRules)
+        : null;
   // A broken certificate is an expired one when some vendor's has run out, else a missing one.
   // On a close call, it's there and valid, only issued to someone else.
   let certExpired = flaw === "certificate" && !close && r.chance(0.7);
@@ -373,7 +409,11 @@ function generateDemand(w: World, r: Rng, day: number, ticket: number, today: To
 
   const demand = validDemand(r.pick(fresh(apps, today)), w, r, day, ticket, today);
   const breakField = flaw && !(flaw === "certificate" && certExpired) && FIELD_FLAWS[flaw];
-  return breakField ? breakField(demand, r, { today, world: w, close }) : demand;
+  const broken = breakField ? breakField(demand, r, { today, world: w, close }) : demand;
+  if (!teaching || !r.chance(olderTooChance(day))) return broken;
+  const older = flawRules.filter((id) => id !== newest.id && SECOND_FLAWS.includes(id));
+  if (older.length === 0) return broken;
+  return FIELD_FLAWS[r.pick(older)]!(broken, r, { today, world: w, close: false });
 }
 
 /** The department's people who haven't been to the desk today, or all of them if everyone has. */
@@ -383,6 +423,14 @@ function freshPeople(capabilityId: string, today: Today) {
   return notYet.length > 0 ? notYet : staff;
 }
 
+/** Which of the day's tickets teach the new rule: any but the first, so it's read first. */
+function teachingSlots(r: Rng) {
+  const slots = Array.from({ length: DEMANDS_PER_DAY - 1 }, (_, i) => i + 1);
+  const picked = new Set<number>();
+  while (picked.size < TEACHING_TICKETS) picked.add(r.pick(slots));
+  return picked;
+}
+
 /** New tickets for every day of the run. */
 export function generateDays(seed: number): Demand[][] {
   const r = rng(seed);
@@ -390,8 +438,9 @@ export function generateDays(seed: number): Demand[][] {
   let ticket = 1001;
   return Array.from({ length: LAST_DAY }, (_, i) => {
     const today: Today = { apps: new Set(), catalog: new Set(), people: new Set() };
-    return Array.from({ length: DEMANDS_PER_DAY }, () => {
-      const demand = generateDemand(world, r, i + 1, ticket++, today);
+    const teaching = teachingSlots(r);
+    return Array.from({ length: DEMANDS_PER_DAY }, (_ticket, slot) => {
+      const demand = generateDemand(world, r, i + 1, ticket++, today, teaching.has(slot));
       today.apps.add(demand.app);
       today.people.add(demand.requester.name);
       if (demand.retires) today.catalog.add(demand.retires);

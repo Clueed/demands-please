@@ -148,22 +148,17 @@ describe("rules", () => {
   });
 });
 
-/** Of the broken tickets on days `from` to `to` over many runs, the share that break that day's new rule. */
-const newestShare = (from: number, to: number) => {
-  let newest = 0;
-  let broken = 0;
+/** Tickets a day on days `from` to `to`, over many runs, that break an older rule. */
+const olderBroken = (from: number, to: number) => {
+  let older = 0;
   for (let seed = 0; seed < 200; seed++)
     generateDays(seed).forEach((tickets, i) => {
       const day = i + 1;
       if (day < from || day > to) return;
-      for (const t of tickets) {
-        const failed = RULES.filter((r) => r.day <= day && r.check?.(t, dayDate(day), []));
-        if (!failed.length || verdict(t, day).kind === "offer") continue;
-        broken++;
-        if (failed.some((r) => r.day === day)) newest++;
-      }
+      for (const t of tickets)
+        if (RULES.some((r) => r.day < day && r.check?.(t, dayDate(day), []))) older++;
     });
-  return newest / broken;
+  return older / (200 * (to - from + 1));
 };
 
 /** Business cases on `day` over many runs that land within 6% of the bar, either side. */
@@ -191,7 +186,7 @@ describe("generateDays", () => {
     expect(new Set(tickets).size).toBe(tickets.length);
   });
 
-  it("each ticket breaks at most one rule in force on its day", () => {
+  it("each ticket breaks at most two rules in force on its day", () => {
     const reasons = [1, 2, 3, 4, 5].flatMap((seed) =>
       generateDays(seed).flatMap((tickets, i) =>
         tickets.map((t) => {
@@ -200,7 +195,7 @@ describe("generateDays", () => {
         }),
       ),
     );
-    expect(Math.max(...reasons)).toBe(1);
+    expect(Math.max(...reasons)).toBe(2);
   });
 
   it("keeps each app's price and SSO, and each vendor's certificate, the same all run", () => {
@@ -265,9 +260,25 @@ describe("generateDays", () => {
     }
   });
 
+  it("breaks the new rule at least twice on the day it's taught", () => {
+    const short: string[] = [];
+    for (let seed = 0; seed < 100; seed++)
+      generateDays(seed).forEach((tickets, i) => {
+        const day = i + 1;
+        const rule = RULES.find((r) => r.day === day)!;
+        const breaking = tickets.filter((t) =>
+          rule.id === "reuse"
+            ? verdict(t, day).kind === "offer"
+            : rule.check?.(t, dayDate(day), []),
+        ).length;
+        if (breaking < 2) short.push(`seed ${seed} day ${day}: ${breaking}`);
+      });
+    expect(short).toEqual([]);
+  });
+
   it("brings the older rules back as the run goes on", () => {
-    expect(newestShare(2, 3)).toBeGreaterThan(0.5);
-    expect(newestShare(9, 10)).toBeLessThan(0.35);
+    expect(olderBroken(9, 10)).toBeGreaterThan(olderBroken(2, 3) * 1.5);
+    expect(olderBroken(9, 10)).toBeGreaterThan(2);
   });
 
   it("makes close calls later in the run: savings within a few percent of the bar", () => {
