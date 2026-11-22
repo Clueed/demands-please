@@ -1,5 +1,5 @@
 import { Power, RotateCcw } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { clock } from "@/game/time";
 
@@ -30,33 +30,42 @@ export function Taskbar({
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const startRef = useRef<HTMLDivElement>(null);
 
+  // Escape or a press anywhere else closes the menu, and that press still does what it does.
   useEffect(() => {
+    if (!menuOpen) return undefined;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
     };
+    const onPointer = (e: PointerEvent) => {
+      const inside = e.target instanceof Node && startRef.current?.contains(e.target);
+      if (!inside) setMenuOpen(false);
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    window.addEventListener("pointerdown", onPointer, true);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer, true);
+    };
+  }, [menuOpen]);
 
   return (
     <footer className="office-taskbar">
-      <button
-        className="office-start"
-        aria-label="Start"
-        aria-expanded={menuOpen}
-        aria-haspopup="menu"
-        onClick={() => setMenuOpen((open) => !open)}
-      >
-        <svg viewBox="0 0 8 8" shapeRendering="crispEdges" aria-hidden="true">
-          <path d={ORB} className="office-orb" />
-          <path d={ORB_SHINE} className="office-orb-shine" />
-        </svg>
-      </button>
-      {menuOpen && (
-        <>
-          {/* Clicking anywhere else closes the menu. */}
-          <div className="fixed inset-0" onClick={() => setMenuOpen(false)} />
+      <div ref={startRef} className="contents">
+        <button
+          className="office-start"
+          aria-label="Start"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <svg viewBox="0 0 8 8" shapeRendering="crispEdges" aria-hidden="true">
+            <path d={ORB} className="office-orb" />
+            <path d={ORB_SHINE} className="office-orb-shine" />
+          </svg>
+        </button>
+        {menuOpen && (
           <div className="office-start-menu" role="menu">
             <div className="office-start-items">
               <button
@@ -81,8 +90,8 @@ export function Taskbar({
               </button>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
       <span className="office-tasks">{tasks}</span>
       <span className="flex-1" />
       {children}
