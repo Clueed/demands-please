@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 import { ConfirmRestart } from "../screen/ConfirmRestart";
 import { LockScreen } from "../screen/LockScreen";
+import { clickMouse, loadMouse } from "../mouse";
 import { DOCUMENT_TITLES } from "../screen/attachments";
 import { Document } from "../screen/Document";
 import { Intranet } from "../screen/Intranet";
@@ -73,6 +74,8 @@ export function Screen({
   const has = (id: string) => apps.some((a) => a.id === id);
   const top = screen.order.findLast((id) => has(id) || files.some((f) => f.kind === id));
 
+  useEffect(loadMouse, []);
+
   // Escape backs out of a restart, or puts away the file on top, like closing its window.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -91,7 +94,8 @@ export function Screen({
   const behind = waiting > 0 && DAY_END - state.clock < waiting * 60;
 
   return (
-    <div className="office-desktop absolute inset-0">
+    // Capture, so every click on the monitor clicks the mouse, whatever it lands on.
+    <div className="office-desktop absolute inset-0" onPointerDownCapture={clickMouse}>
       {has("catalog") && (
         <ScreenWindow id="catalog" label="Service catalog" {...win}>
           <ServiceCatalog
