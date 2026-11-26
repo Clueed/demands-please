@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { clickMouse } from "../mouse";
 import { Px } from "./Px";
 
 const SHADOW = "#9f8462";
@@ -105,6 +106,7 @@ export function Keyboard() {
             onPointerDown={(e) => {
               if (e.button !== 0) return;
               press(key.code, true);
+              clickMouse();
               if (key.code === "CapsLock") setCaps((c) => !c);
               const up = () => press(key.code, false);
               window.addEventListener("pointerup", up, { once: true });

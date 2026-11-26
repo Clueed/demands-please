@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { FACES, rectStyle, REGIONS, roomLayout } from "../layout";
 import { useFit } from "../stageFitContext";
+import { clickMouse } from "../mouse";
 import { ART_PX } from "./pixel";
 import { Fidget } from "./Fidget";
 import { Keyboard } from "./Keyboard";
@@ -293,13 +294,16 @@ export function Room({
           <Px d="M0 0h62l12 26H-8Z" fill="#566961" />
           <Px d="M0 2h60l10 22H-6Z" fill="#61756a" className="fidget-surface" />
           <Fidget kind="mouse" bounds="parent" transform="" label="Mouse">
-            <Px d="M18 20h4v4h14v2H18Z" fill="#46574f" />
-            <Px d="M24 4h12v2h2v2h2v12h-2v2h-2v2H24v-2h-2v-2h-2V8h2V6h2Z" fill="#3a4744" />
-            <Px d="M24 6h12v2h2v12h-2v2H24v-2h-2V8h2Z" fill="#8a978a" />
-            <Px d="M22 12h16v2H22Zm8-6h2v6h-2Z" fill="#4f5f57" />
-            <Px d="M24 8h4v2h-4Z" fill="#b3bea9" />
-            <Px d="M24 6h6v6h-6Z" fill="#6f7c70" className="fx fx-click" />
-            <Px d="M30 8h2v2h-2Z" fill="#c9d3bd" className="fx fx-wheel" />
+            {/* Its button clicks under the press, the same click as on the monitor. */}
+            <g onPointerDown={(e) => e.button === 0 && clickMouse()}>
+              <Px d="M18 20h4v4h14v2H18Z" fill="#46574f" />
+              <Px d="M24 4h12v2h2v2h2v12h-2v2h-2v2H24v-2h-2v-2h-2V8h2V6h2Z" fill="#3a4744" />
+              <Px d="M24 6h12v2h2v12h-2v2H24v-2h-2V8h2Z" fill="#8a978a" />
+              <Px d="M22 12h16v2H22Zm8-6h2v6h-2Z" fill="#4f5f57" />
+              <Px d="M24 8h4v2h-4Z" fill="#b3bea9" />
+              <Px d="M24 6h6v6h-6Z" fill="#6f7c70" className="fx fx-click" />
+              <Px d="M30 8h2v2h-2Z" fill="#c9d3bd" className="fx fx-wheel" />
+            </g>
           </Fidget>
         </Fidget>
 
